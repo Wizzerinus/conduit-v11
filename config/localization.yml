@@ -1,0 +1,48 @@
+title: Плюсник 9Д
+titles:
+  login: Вход в систему
+  admin: Администрация
+  sheet_editor: Редактор листков
+navbar:
+  index: Главная
+  sheet_editor: Редактор листков
+  sheet_viewer: Просмотр листков
+  admin: Администрация
+  logout: Выйти
+exceptions:
+  invalid_credentials: Неверный логин или пароль!
+  account_disabled: Ваша учетная запись заблокирована! Обратитесь к Сане.
+  bad_jwt: Неверный токен доступа! Обратитесь к Сане.
+  insufficient_scope: Недостаточно прав для выполнения операции!
+  account_already_exists: Учетная запись с таким логином уже существует!
+
+  latex_invariant_error: Не удалось реализовать инвариант компилятора! Обратитесь к Сане.
+  latex_syntax_error: "Ошибка синтаксиса LaTeX: '%(message)s'"
+  latex_semantic_error: "Семантическая ошибка при компиляции LaTeX: '%(message)s'"
+  no_sheet_id: Не указан идентификатор листка! Установите при помощи '\sheetid{<id>}'.
+  no_sheet_name: Не указано название листка! Установите при помощи '\sheetname{<id>}'.
+  file_not_found: Файл '%(filename)s' не найден!
+  latex_sheet_id_mismatch: Идентификатор листка в LaTeX не совпадает с ожидаемым! Ожидалось '%(expected)s', получено '%(actual)s'. Сохранение отменено для сохранения данных.
+  no_latex_sheet: В файле '%(filename)s' нет LaTeX объекта!
+messages:
+  login_for_full_access: Войдите в систему для полного доступа к сайту.
+  logged_in_as: "Вы вошли в систему как %(name)s. Ваши права доступа:"
+  last_sheets: Последние листочки
+forms:
+  username: Имя пользователя
+  password: Пароль
+  btn_login: Войти
+
+  btn_add_sheet: Создать листок
+  btn_remove_sheet: Удалить листок
+scopes:
+  admin: Администрация сайта
+  sheets_edit: Редактирование TeX файлов
+  conduit_edit: Редактирование плюсника
+  conduit_generation: Просмотр своего плюсника
+
+sheet_editor:
+  sheet_in_use: Редактируется пользователем
+  unsaved_changes: В файле есть несохранённые изменения! Используйте Ctrl+S, чтобы их сохранить, или нажмите на тот же листок ещё раз, чтобы их сбросить.
+  delete_dangerous: Нажмите на эту кнопку ещё раз, чтобы удалить листок.
+  delete_sheet: Если вы точно хотите удалить листок, введите здесь его номер/ID.

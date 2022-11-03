@@ -1,0 +1,16 @@
+<nav class="navbar navbar-dark bg-dark navbar-expand-lg">
+    <div class="container">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav-main">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="nav-main">
+            <ul class="navbar-nav">
+                {% for button, link_data in webcfg.navbar.items() if not link_data.scope or check_scope(link_data.scope) %}
+                <li class="nav-item">
+                    <a class="nav-link{{ " active" if button == title else "" }}" href="{{ link_data.url }}">{{ locale.navbar[button] }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</nav>

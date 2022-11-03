@@ -1,0 +1,8 @@
+compilation:
+  character-limit: 50000
+  command-nesting-limit: 10
+  excess-stacking: 60
+iterators:
+  first-letter: "а"
+  letter-skips:
+    - "й"

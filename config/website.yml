@@ -1,0 +1,19 @@
+navbar:
+  # <page ID>: <page URL>, the button name is taken from localization.yml,
+  # the current page is based on the 'title' variable inside the Jinja template
+  index:
+    url: /
+
+  sheet_viewer:
+    url: /sheets/viewer
+  sheet_editor:
+    url: /sheets/editor
+    scope: sheets_edit
+
+  admin:
+    url: /admin/
+    scope: admin
+
+  logout:
+    url: /login/logout
+    scope: login

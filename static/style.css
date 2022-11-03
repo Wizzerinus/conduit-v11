@@ -1,0 +1,17 @@
+#ace-editor {
+    height: calc(100vh - 177px);
+    width: 100%;
+}
+
+#katex-viewer {
+    height: calc(100vh - 112px);
+}
+
+.saved-symbol {
+	position: fixed;
+    top: 55px;
+    right: 5px;
+	color: red;
+	font-size: 40px;
+    font-weight: bold;
+}

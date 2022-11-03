@@ -1,0 +1,199 @@
+{% extends "template.html" %}
+{% set title = "sheet_editor" %}
+{% block main %}
+    <h2>{{ locale.titles.sheet_editor }}</h2>
+
+    <div id="editor-app">
+        {% include "parts/vue-alert.html" %}
+
+        <div class="saved-symbol" v-if="unsaved_changes">*</div>
+
+        <div class="row">
+            <div class="col-3 list-group">
+                <span v-for="(sheet, index) in sheet_list" :title="getTitle(sheet)">
+                    <button type="button" class="list-group-item list-group-item-action"
+                            :disabled="isDisabled(sheet)" :class="getColor(sheet, index)" @click="openSheet(sheet)">
+                        [[ sheet.name ]]
+                    </button>
+                </span>
+                <button type="button" class="list-group-item list-group-item-action list-group-item-primary" @click="newSheet">
+                    {{ locale.forms.btn_add_sheet }}
+                </button>
+                <button type="button" class="list-group-item list-group-item-action list-group-item-danger" @click="deleteSheet">
+                    {{ locale.forms.btn_remove_sheet }}
+                </button>
+            </div>
+            <div class="col-9">
+                <div id="ace-editor-teleport"></div>
+            </div>
+        </div>
+    </div>
+    <div id="ace-editor"></div>
+
+    <script src="/static/wssbind.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.12.5/ace.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.12.5/mode-latex.min.js"></script>
+    <script src="/static/editorbind.js"></script>
+
+    <script>
+        const InitialText = "\\sheetid{}\n\\sheetname{New sheet}"
+        let wss, editor
+        const app = {
+            data() {
+                return {
+                    unsaved_changes: false,
+                    alert: new AlertModule(),
+
+                    sheet_list: [],
+                    current_text: "",
+                    current_sheet: "",
+                    other_users: {},
+                    other_users_sheets: {},
+                    last_sheet: "",
+                }
+            },
+
+            methods: {
+                ws_onSetSheet(data) {
+                    const user_id = data.cid
+                    let current_sheet
+                    if ((current_sheet = this.other_users[user_id]))
+                        delete this.other_users_sheets[current_sheet]
+                    console.log(data)
+                    if (data.sheet) {
+                        this.other_users[user_id] = data.sheet
+                        this.other_users_sheets[data.sheet] = data.client
+                    }
+                },
+                ws_onInit(data) {
+                    this.sheet_list = data.files
+                    for (const handle_id of Object.keys(data.open_sheets)) {
+                        const {client, sheet} = data.open_sheets[handle_id]
+                        this.other_users[handle_id] = sheet
+                        this.other_users_sheets[sheet] = client
+                    }
+                },
+                ws_onNewSheet(data) {
+                    this.sheet_list.unshift(data)
+                },
+                ws_DeleteSheet(data) {
+                    this.sheet_list = this.sheet_list.filter(sheet => sheet.id !== data.id)
+                },
+
+                isDisabled(sheet) {
+                    return this.other_users_sheets[sheet.id] !== undefined
+                },
+                getTitle(sheet) {
+                    const username = this.other_users_sheets[sheet.id]
+                    if (username === undefined)
+                        return ""
+                    return `{{ locale.sheet_editor.sheet_in_use }} ${username}`
+                },
+                getColor(sheet, index) {
+                    if (sheet.id === this.current_sheet)
+                        return "list-group-item-success"
+
+                    if (this.isDisabled(sheet))
+                        return "list-group-item-dark"
+                    if (index <= 3)
+                        return "list-group-item-info"
+                    return "list-group-item-secondary"
+                },
+                newSheet() {
+                    if (this.unsaved_changes && this.last_sheet !== this.current_sheet) {
+                        this.alert.set("{{ locale.sheet_editor.unsaved_changes }}", "warning")
+                        this.last_sheet = this.current_sheet
+                        return
+                    }
+
+                    this.alert.clear()
+                    this.current_sheet = ""
+                    this.last_sheet = ""
+                    this.current_text = InitialText
+                    editor.setText(this.current_text)
+                    this.unsaved_changes = false
+                },
+
+                async deleteSheet() {
+                    if (!this.current_sheet)
+                        return
+
+                    if (this.last_sheet !== this.current_sheet) {
+                        this.alert.set("{{ locale.sheet_editor.delete_dangerous }}", "warning")
+                        this.last_sheet = this.current_sheet
+                        return
+                    }
+
+                    const attempted_id = prompt("{{ locale.sheet_editor.delete_sheet }}")
+                    this.last_sheet = ""
+                    this.alert.clear()
+                    if (attempted_id !== this.current_sheet)
+                        return
+
+                    await axios.delete(`/sheets/${this.current_sheet}`)
+                    this.current_sheet = ""
+                    editor.setText("")
+                    this.unsaved_changes = false
+                    wss.send("")
+                },
+
+                async openSheet(sheet) {
+                    if (this.unsaved_changes && this.last_sheet !== this.current_sheet) {
+                        this.alert.show("{{ locale.sheet_editor.unsaved_changes }}", "warning")
+                        this.last_sheet = this.current_sheet
+                        return
+                    }
+
+                    this.last_sheet = ""
+                    this.alert.clear()
+                    try {
+                        const response = await axios.get(`/sheets/content/${sheet.id}`)
+                        editor.setText(response.data)
+                        this.current_sheet = sheet.id
+                        this.unsaved_changes = false
+                        wss.send(sheet.id)
+                    } catch (e1) {
+                        let content = e1
+                        try {
+                            content = e1.response.data.detail
+                        } catch(e2) {}
+                        if (!content)
+                            content = e1
+                        this.alert.set(`Error opening sheet ${sheet.id}: ${content}`, "danger")
+                    }
+                },
+
+                async saveText(text) {
+                    if (!this.unsaved_changes)
+                        return
+                    try {
+                        const response = await axios.post("/sheets/edit", {
+                            file_content: text, expected_sheet: this.current_sheet || ""
+                        })
+                        this.unsaved_changes = false
+                        this.current_sheet = response.data.sheet_id
+                        wss.send(this.current_sheet)
+                        this.alert.clear()
+                    } catch(e1) {
+                        this.alert.set(e1.response.data.detail, "danger")
+                    }
+                }
+            },
+            created() {
+                window.onbeforeunload = () => this.unsaved_changes ? true : null
+            }
+        }
+
+        const vue = Vue.createApp(app)
+        vue.config.compilerOptions.delimiters = ["[[", "]]"]
+        const vue_mount = vue.mount("#editor-app")
+        wss = new WebsocketBind(vue_mount, "/sheets/editor")
+        editor = new EditorBind(vue_mount, "ace-editor", "ace/mode/latex")
+
+        // This is a crutch that fixes Vue being not compatible with Ace for some reason
+        // It's not a good solution, but it works
+        const ace_editor = document.getElementById("ace-editor")
+        const ace_teleport = document.getElementById("ace-editor-teleport")
+        ace_teleport.appendChild(ace_editor)
+    </script>
+{% endblock %}

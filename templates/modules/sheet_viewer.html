@@ -1,0 +1,93 @@
+{% extends "template.html" %}
+{% set title = "sheet_viewer" %}
+{% block main %}
+    <div id="viewer-app" class="mt-2">
+        <div class="saved-symbol" v-if="unsaved_changes">*</div>
+
+        <div class="row">
+            <div class="col-3 list-group">
+                <button v-for="(sheet, index) in sheet_list" type="button" class="list-group-item list-group-item-action"
+                        :class="getColor(sheet, index)" @click="openSheet(sheet)">
+                    [[ sheet.name ]]
+                </button>
+            </div>
+            <div class="col-9">
+                <h2>[[ sheet_names[current_sheet] ]]</h2>
+                <div v-html="sheet_content" v-katex="" class="overflow-auto" id="katex-viewer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/wssbind.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.12.5/ace.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.12.5/mode-latex.min.js"></script>
+    <script src="/static/editorbind.js"></script>
+
+    <script>
+        const katex_viewer = document.getElementById("katex-viewer")
+        const katex_viewer_parent = document.getElementById("katex-viewer-parent")
+        const katex_viewer_teleport = document.getElementById("katex-viewer-teleport")
+        const app = {
+            data() {
+                return {
+                    sheet_list: [],
+                    sheet_names: {},
+                    current_sheet: "",
+                    sheet_content: "",
+                }
+            },
+
+            methods: {
+                async openSheet(sheet) {
+                    try {
+                        const response = await axios.get(`/sheets/file/${sheet.id}`)
+                        this.sheet_content = response.data
+                        this.current_sheet = sheet.id
+                    } catch (e1) {
+                        console.log(e1)
+                    }
+                },
+                getColor(sheet, index) {
+                    if (sheet.id === this.current_sheet)
+                        return "list-group-item-success"
+
+                    if (index <= 3)
+                        return "list-group-item-info"
+                    return "list-group-item-secondary"
+                },
+            },
+            async created() {
+                try {
+                    const response = await axios.get("/sheets/list")
+                    this.sheet_list = response.data
+                    for (const sheet of this.sheet_list) {
+                        this.sheet_names[sheet.id] = sheet.name
+                    }
+                } catch (e1) {
+                    let content = e1
+                    try {
+                        content = e1.response.data.detail
+                    } catch(e2) {}
+                    if (!content)
+                        content = e1
+                    this.alert.set(`Error loading sheet list: ${content}`, "danger")
+                }
+            }
+        }
+
+        const vue = Vue.createApp(app)
+        vue.directive("katex", {
+            updated(el, binding) {
+                renderMathInElement(el, {
+                    delimiters: [
+                        {left: "$$", right: "$$", display: true},
+                        {left: "$", right: "$", display: false},
+                    ],
+                    throwOnError: false
+                })
+            }
+        })
+        vue.config.compilerOptions.delimiters = ["[[", "]]"]
+        vue.mount("#viewer-app")
+    </script>
+{% endblock %}

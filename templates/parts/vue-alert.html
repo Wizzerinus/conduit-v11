@@ -1,0 +1,4 @@
+<div v-if="alert.alert" class="alert alert-dismissible" :class="'alert-' + alert.style" role="alert">
+    [[ alert.alert ]]
+    <button type="button" class="btn-close" @click="alert.clear()"></button>
+</div>

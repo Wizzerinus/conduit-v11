@@ -1,0 +1,14 @@
+{% extends "template.html" %}
+{% set title = "index" %}
+{% block main %}
+    <h2>{{ locale.title }}</h2>
+
+    {{ locale.messages.logged_in_as % dict(name=user.name) }}
+    <ul>
+    {% for scope in user.privileges if locale.scopes[scope] %}
+        <li>{{ locale.scopes[scope] }}</li>
+    {% endfor %}
+    </ul>
+
+    {% include "parts/last-sheets.html" %}
+{% endblock %}

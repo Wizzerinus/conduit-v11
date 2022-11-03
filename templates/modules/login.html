@@ -1,0 +1,23 @@
+{% extends "template.html" %}
+{% set title = "index" %}
+{% block main %}
+<h2>{{ locale.title }}</h2>
+
+{{ locale.messages.login_for_full_access }}
+
+<form action="/login/auth" method="post">
+    <div class="row">
+        <div class="col-auto">
+            <input class="form-control" type="text" name="username" placeholder="{{ locale.forms.username }}" />
+        </div>
+        <div class="col-auto">
+            <input class="form-control" type="password" name="password" placeholder="{{ locale.forms.password }}" />
+        </div>
+        <div class="col-auto">
+            <input class="btn btn-primary" type="submit" value="{{ locale.forms.btn_login }}">
+        </div>
+    </div>
+</form>
+
+{% include "parts/last-sheets.html" %}
+{% endblock %}

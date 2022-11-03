@@ -1,0 +1,3 @@
+datastore:
+  backend: json
+  data-folder: json-db

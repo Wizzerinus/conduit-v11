@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta property="og:title" content="{{ locale.titles[title] }}" />
+    {% if image is defined %}
+    <meta property="og:image" content="images/{{ image }}" />
+    {% endif %}
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://v2025-b3.179.ru{{ request.path }}" />
+    <meta property="og:site_name" content="{{ locale.title }}" />
+    <meta name="description" content="{{ locale.title }}">
+    <meta name="viewport" property="width=device-width, initial-scale=1">
+
+    <title>{% if title and locale.titles[title] %}{{ locale.titles[title] }} - {% endif %}{{ locale.title }}</title>
+    <script src="https://unpkg.com/vue@3.2.6/dist/vue.global.prod.js"></script>
+    <script src="https://unpkg.com/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/axios@0.21.4/dist/axios.min.js"></script>
+    <script src="https://kit.fontawesome.com/c7aeb2800a.js" crossorigin="anonymous"></script>
+    <link href="https://unpkg.com/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/static/style.css" rel="stylesheet" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.css" crossorigin="anonymous" />
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.js" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+
+    {% block head %}
+    {% endblock %}
+</head>
+<body>
+    <div id="page-container">
+        <div id="content-wrap">
+            {% block misc %}
+                {% include 'navbar.html' %}
+            {% endblock %}
+            {% block fmain %}
+                <main class="container">
+                    <div class="row">
+                        <div class="col">
+                            {% block main %}
+                            {% endblock %}
+                        </div>
+                    </div>
+                </main>
+            {% endblock %}
+            {% block misc2 %}
+                {% include 'footer.html' %}
+            {% endblock %}
+        </div>
+    </div>
+</body>
+</html>
