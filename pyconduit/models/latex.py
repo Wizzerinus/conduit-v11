@@ -104,7 +104,7 @@ class LatexDocument(BaseModel):
                 current_text = "\n" + current_text
             object_texts.append(current_text)
 
-        return "".join(object_texts).replace("\\\n\n", "\n\n")
+        return "".join(object_texts).replace("\\\n\n", "\n\n").strip("\n\\")
 
 
 class LatexRequest(BaseModel):
