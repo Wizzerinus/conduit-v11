@@ -3,6 +3,7 @@ from starlette.requests import Request
 from starlette.responses import HTMLResponse
 
 from pyconduit.models.user import User
+from pyconduit.shared.helpers import get_config
 from pyconduit.website.decorators import get_current_user, make_template_data, templates
 
 index_app = FastAPI()
@@ -17,3 +18,8 @@ async def index_page(request: Request, user: None | User = Depends(get_current_u
         return templates.TemplateResponse("modules/dashboard.html", data)
     else:
         return templates.TemplateResponse("modules/login.html", data)
+
+
+@index_app.get("/locale")
+async def get_locale():
+    return get_config("localization")

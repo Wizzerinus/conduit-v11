@@ -116,7 +116,11 @@ async def delete_file(file_id: str):
 # Used to broadcast the currently edited file to prevent multiple users from editing the same file
 @sheets_app.websocket("/editor")
 async def editor_websocket(websocket: WebSocket):
-    user = await get_user_by_token(websocket.session["access_token"])
+    try:
+        user = await get_user_by_token(websocket.session["access_token"])
+    except KeyError:
+        await websocket.close(code=1008)
+        return
 
     if user is None or not user.privileges.sheets_edit:
         raise WebSocketDisconnect(code=1008)

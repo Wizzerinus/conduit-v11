@@ -17,3 +17,10 @@ navbar:
   logout:
     url: /login/logout
     scope: login
+
+all_scopes:
+  - login
+  - conduit_generation
+  - conduit_edit
+  - sheets_edit
+  - admin

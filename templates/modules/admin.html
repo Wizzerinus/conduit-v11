@@ -3,4 +3,196 @@
 {% block main %}
     <h2>{{ locale.titles.admin }}</h2>
 
+    <div id="admin-app">
+        {% include "parts/vue-alert.html" %}
+
+        <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#bulk-create-users-modal">
+            {{ locale.forms.btn_bulk_create_users }}
+        </button>
+
+        <template v-for="category in all_categories">
+            <h4>[[ category.name ]]</h4>
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xxl-4">
+                <div class="col" v-for="user in category.users">
+                    <div class="card">
+                        <div class="card-header position-relative">
+                            <b>[[ user.name ]]</b>
+                            <span v-if="user.dirty" class="saved-symbol" style="top: -5px">*</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="card-text">
+                                <span v-html="locale.messages.user_login.replace('%s', user.login)"></span>
+                                <ul>
+                                    <template v-for="(is_given, scope) in user.privileges">
+                                        <li v-if="is_given && locale.scopes[scope]">
+                                            [[ locale.scopes[scope] ]]
+                                        </li>
+                                    </template>
+                                </ul>
+                            </div>
+                            <button type="button" data-bs-toggle="modal" data-bs-target="#edit-user-modal"
+                                    class="btn btn-primary" @click="editUser(user.login)">
+                                {{ locale.forms.btn_edit_user }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <div id="bulk-create-users-modal" class="modal fade" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{ locale.titles.bulk_create_users_modal }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label class="form-label" for="bulk-create-textarea">
+                            {{ locale.messages.bulk_create_howto }}
+                        </label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="bulk-teachers" v-model="bulk_teachers" />
+                            <label class="form-check-label" for="bulk-teachers">{{ locale.forms.switch_teachers }}</label>
+                        </div>
+                        <textarea v-model="bulk_create_list" class="form-control mt-2" rows="7" id="bulk-create-textarea"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ locale.forms.btn_close }}</button>
+                        <button type="button" class="btn btn-primary" @click="bulkCreate">{{ locale.forms.btn_save }}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="edit-user-modal" class="modal fade" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content" v-if="user">
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{ locale.titles.edit_user_modal }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-4">{{ locale.forms.admin_edit_login }}</div>
+                            <div class="col">
+                                [[ user.name ]] (<code>[[ user.login ]]</code>)
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-4">
+                                <label class="form-label" for="admin_username">
+                                    {{ locale.forms.admin_edit_username }}
+                                </label>
+                            </div>
+                            <div class="col">
+                                <input class="form-control" type="text" v-model="user.name" @change="markDirty" id="admin_username" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-4">{{ locale.forms.admin_edit_privileges }}</div>
+                            <div class="col">
+                                {% for scope in webcfg.all_scopes %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" :id="'scope-' + scope"
+                                           v-model="user.privileges.{{ scope }}" @change="markDirty">
+                                    <label class="form-check-label" v-for="'scope-' + scope">
+                                        {{ locale.scopes[scope] or scope }}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col">
+                                <button type="button" @click="resetPassword" class="btn btn-warning">
+                                    {{ locale.forms.btn_reset_password }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ locale.forms.btn_close }}</button>
+                        <button type="button" class="btn btn-primary" @click="saveUser">{{ locale.forms.btn_save }}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const app = {
+        data() {
+            return {
+                alert: new AlertModule(),
+                user: null,
+                locale: {},
+                all_categories: [],
+                user_objects: {},
+                bulk_teachers: false,
+                bulk_create_list: "",
+                allow_bulk_create: true,
+            }
+        },
+        methods: {
+            editUser(login) {
+                this.user = this.user_objects[login]
+            },
+            async saveUser() {
+                try {
+                    await axios.post("/admin/update-user", this.user)
+                    location.reload()
+                } catch(e) {
+                    this.alert.set(`Error while updating privileges: ${e}`, "danger")
+                }
+            },
+            markDirty() {
+                this.user.dirty = true
+            },
+            async resetPassword() {
+                try {
+                    const response = await axios.post(`/admin/reset-password/${this.user.login}`)
+                    this.alert.set(`New password: <code>${response.data.password}</code>`, "info", true)
+                } catch(e) {
+                    this.alert.set(`Error while resetting password: ${e}`, "danger")
+                }
+            },
+            async bulkCreate() {
+                try {
+                    this.allow_bulk_create = false
+                    const response = await axios.post("/admin/create-users", {
+                        teachers: this.bulk_teachers, users: this.bulk_create_list
+                    })
+                    this.bulk_create_list = response.data
+                } catch(e) {
+                    this.alert.set(`Error while bulk creating users: ${e}`, "danger")
+                    this.allow_bulk_create = true
+                }
+            },
+        },
+        async created() {
+            try {
+                const locale_response = await axios.get("/locale")
+                this.locale = locale_response.data
+
+                const response = await axios.get("/admin/users")
+                const data = response.data
+                this.all_categories = data.partition
+                this.user_objects = {}
+                for (const cat of data.partition) {
+                    for (const user of cat.users) {
+                        this.user_objects[user.login] = user
+                        user.dirty = false
+                    }
+                }
+            } catch (error) {
+                console.error(error)
+            }
+        }
+    }
+
+    const vue = Vue.createApp(app)
+    vue.config.compilerOptions.delimiters = ["[[", "]]"]
+    vue.mount("#admin-app")
+    </script>
 {% endblock %}

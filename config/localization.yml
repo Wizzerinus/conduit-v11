@@ -3,6 +3,9 @@ titles:
   login: Вход в систему
   admin: Администрация
   sheet_editor: Редактор листков
+
+  edit_user_modal: Редактирование пользователя
+  bulk_create_users_modal: Создание пользователей
 navbar:
   index: Главная
   sheet_editor: Редактор листков
@@ -28,18 +31,34 @@ messages:
   login_for_full_access: Войдите в систему для полного доступа к сайту.
   logged_in_as: "Вы вошли в систему как %(name)s. Ваши права доступа:"
   last_sheets: Последние листочки
+  user_login: "Логин: <code>%s</code><br /> привилегии:"
+  bulk_create_howto: Укажите одно имя на строку. Для каждого нового пользователя, который ещё не существует, к имени будут добавлены логин и пароль.
 forms:
   username: Имя пользователя
   password: Пароль
   btn_login: Войти
 
+  btn_close: Закрыть
+  btn_save: Сохранить
   btn_add_sheet: Создать листок
   btn_remove_sheet: Удалить листок
+  btn_edit_user: Редактировать
+  btn_reset_password: Сбросить пароль
+  btn_bulk_create_users: Создать пользователей
+  switch_teachers: Создание учителей
+  admin_edit_login: Логин
+  admin_edit_username: Имя пользователя
+  admin_edit_privileges: Права доступа
 scopes:
   admin: Администрация сайта
   sheets_edit: Редактирование TeX файлов
   conduit_edit: Редактирование плюсника
   conduit_generation: Просмотр своего плюсника
+
+user_category:
+  admin: Администраторы
+  teacher: Учителя
+  student: Ученики
 
 sheet_editor:
   sheet_in_use: Редактируется пользователем

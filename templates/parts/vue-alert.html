@@ -1,4 +1,5 @@
 <div v-if="alert.alert" class="alert alert-dismissible" :class="'alert-' + alert.style" role="alert">
-    [[ alert.alert ]]
+    <span v-if="!alert.allow_html">[[ alert.alert ]]</span>
+    <span v-else="" v-html="alert.alert"></span>
     <button type="button" class="btn-close" @click="alert.clear()"></button>
 </div>

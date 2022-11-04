@@ -23,8 +23,19 @@ class User(BaseModel):
     privileges: Privileges
 
 
+class UserSensitive(BaseModel):
+    login: str
+    name: str
+    privileges: Privileges
+
+
 class RegisterUser(BaseModel):
     login: str
     password: constr(min_length=6, max_length=64)
     name: str
     privileges: Privileges
+
+
+class BulkRegister(BaseModel):
+    teachers: bool
+    users: str

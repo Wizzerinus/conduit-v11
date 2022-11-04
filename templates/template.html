@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.css" crossorigin="anonymous" />
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.js" crossorigin="anonymous"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+    <script src="/static/utilities.js"></script>
 
     {% block head %}
     {% endblock %}
@@ -32,6 +33,18 @@
         <div id="content-wrap">
             {% block misc %}
                 {% include 'navbar.html' %}
+                {% with messages = get_flashed_messages(request) %}
+                    {% if messages %}
+                        <div class="container">
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.level }} alert-dismissible fade show mt-2" role="alert">
+                                    {{ message.message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
             {% endblock %}
             {% block fmain %}
                 <main class="container">

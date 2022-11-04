@@ -5,27 +5,6 @@ const PingPeriod = 25000
 const ReconnectPeriod = 2000
 const PongDelay = 1000
 
-class AlertModule {
-    constructor() {
-        this.alert = ""
-        this.style = "info"
-    }
-
-    clear() {
-        this.alert = ""
-    }
-
-    clearIf(val) {
-        if (this.alert === val)
-            this.clear()
-    }
-
-    set(alert, style) {
-        this.alert = alert
-        this.style = style
-    }
-}
-
 class WebsocketBind {
     constructor(app, path) {
         this.app = app

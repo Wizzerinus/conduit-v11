@@ -103,6 +103,9 @@ class AtomicDict:
     def items(self):
         return self._data.items()
 
+    def values(self):
+        return self._data.values()
+
     def __len__(self):
         return len(self._data)
 

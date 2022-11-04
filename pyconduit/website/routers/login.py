@@ -25,6 +25,12 @@ def hash_password(password: str, hasher: str) -> str:
     raise ValueError(f"Unknown hasher: {algo}")
 
 
+def default_hash(password: str) -> tuple[str, str]:
+    salt = secrets["password_salt"]
+    hasher = f"scrypt;{salt}"
+    return hash_password(password, hasher), hasher
+
+
 @login_app.post("/token")
 async def generate_token(init_user: OAuth2PasswordRequestForm = Depends()):
     user = find_user(init_user.username)
@@ -44,7 +50,7 @@ async def login(request: Request, response: Response, init_user: OAuth2PasswordR
     try:
         token = await generate_token(init_user)
     except HTTPException as e:
-        flash_message(request, e.detail, "error")
+        flash_message(request, e.detail, "danger")
     else:
         request.session["access_token"] = token["access_token"]
     response.status_code = 302
@@ -65,8 +71,7 @@ async def register(user: RegisterUser):
         if user.login in accounts:
             raise HTTPException(status_code=400, detail=locale["exceptions"]["account_already_exists"])
 
-        salt = secrets["password_salt"]
-        hasher = f"scrypt;{salt}"
-        accounts[user.login] = dict(user.dict(), password=hash_password(user.password, hasher), salt=hasher)
+        password_hash, salt = default_hash(user.password)
+        accounts[user.login] = dict(user.dict(), password=password_hash, salt=salt)
 
     return {}

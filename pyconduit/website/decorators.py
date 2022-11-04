@@ -14,6 +14,17 @@ from pyconduit.shared.datastore import datastore_manager
 from pyconduit.shared.helpers import get_config
 
 templates = Jinja2Templates(directory="templates")
+
+
+def get_flashed_messages(request: Request) -> None | dict:
+    if "flash" in request.session:
+        flash = request.session["flash"]
+        request.session["flash"] = []
+        return flash
+    return None
+
+
+templates.env.globals["get_flashed_messages"] = get_flashed_messages
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
 user_datastore = datastore_manager.get("accounts")
 locale = get_config("localization")
@@ -33,7 +44,10 @@ def find_user(username: str) -> None | User:
 
 
 def flash_message(request: Request, message: str, level: str = "info"):
-    request.session["flash"] = {"message": message, "level": level}
+    if not (flash_list := request.session.get("flash")):
+        flash_list = []
+        request.session["flash"] = flash_list
+    flash_list.append({"message": message, "level": level})
 
 
 async def get_user_by_token(token: str) -> None | User:
@@ -88,13 +102,14 @@ def create_access_token(data: dict, expire: timedelta = timedelta(hours=168)) ->
     return encoded_jwt
 
 
-async def make_template_data(request: Request, user: None | User = None) -> dict:
+async def make_template_data(request: Request, user: None | User = None, **kwargs) -> dict:
     def check_scope(scope: str):
         if user is None:
             return False
         return user.privileges.has_scope(scope)
 
     return dict(
+        kwargs,
         request=request,
         locale=get_config("localization"),
         webcfg=get_config("website"),
