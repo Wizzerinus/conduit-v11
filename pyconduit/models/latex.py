@@ -21,6 +21,9 @@ class LatexObject(BaseModel, abc.ABC):
     def make_string(self, allow_recursion: bool = True) -> str:
         pass
 
+    def is_inline(self) -> bool:
+        return False
+
     def newline_before(self) -> bool:
         return True
 
@@ -50,6 +53,7 @@ class LatexProblem(LatexObject):
     conduit_num: str
     nlb: bool
     nla: bool
+    inline: bool
     conduit_include: bool = True
 
     def make_string(self, allow_recursion: bool = True) -> str:
@@ -60,6 +64,9 @@ class LatexProblem(LatexObject):
 
     def newline_after(self) -> bool:
         return self.nla
+
+    def is_inline(self) -> bool:
+        return self.inline
 
 
 class LatexInclude(LatexObject):
@@ -97,11 +104,11 @@ class LatexDocument(BaseModel):
             current_text = obj.make_string(allow_recursion)
             if obj.newline_after():
                 current_text += "\n\n"
-            else:
+            elif not obj.is_inline():
                 current_text += "\\\n"
 
             if obj.newline_before():
-                current_text = "\n" + current_text
+                current_text = "\n\n" + current_text
             object_texts.append(current_text)
 
         return "".join(object_texts).replace("\\\n\n", "\n\n").strip("\n\\")

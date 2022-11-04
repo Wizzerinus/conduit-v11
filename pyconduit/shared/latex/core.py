@@ -190,6 +190,7 @@ class ProblemMacro(LatexCommand):
         conduit_include: bool = True,
         standalone: bool = False,
         start: bool = False,
+        inline: bool = False,
         cfmt: str = "",
     ):
         self.fmt = fmt
@@ -199,6 +200,7 @@ class ProblemMacro(LatexCommand):
         self.cfmt = cfmt
         self.newline_after = standalone
         self.newline_before = standalone or start
+        self.inline = inline
 
     @staticmethod
     def update_iterator(context: dict, it_name: str, value: int):
@@ -235,6 +237,7 @@ class ProblemMacro(LatexCommand):
             conduit_num=cfmt,
             nlb=self.newline_before,
             nla=self.newline_after,
+            inline=self.inline,
         )
 
     def get_priority(self) -> int:

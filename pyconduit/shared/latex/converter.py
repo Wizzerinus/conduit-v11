@@ -59,9 +59,9 @@ BuiltinCommands = {
     # problem macros
     "z": ProblemMacro(problem=1, letter=0, fmt="%(z)i%(ext)s.", cfmt="%(z)i", standalone=True),
     "zcirc": ProblemMacro(problem=1, letter=0, fmt="%(z)i$^\\circ$%(ext)s.", cfmt="%(z)i<sup>o</sup>", standalone=True),
-    "leth": ProblemMacro(letter=1, fmt="%(leth)s%(ext)s)", cfmt="%(z)i%(leth)s"),
+    "leth": ProblemMacro(letter=1, fmt="%(leth)s%(ext)s)", cfmt="%(z)i%(leth)s", inline=True),
     "lett": ProblemMacro(letter=1, fmt="%(leth)s%(ext)s)", cfmt="%(z)i%(leth)s"),
-    "lethcirc": ProblemMacro(letter=1, fmt="%(leth)s$^\\circ$%(ext)s)", cfmt="%(z)i%(leth)s<sup>o</sup>"),
+    "lethcirc": ProblemMacro(letter=1, fmt="%(leth)s$^\\circ$%(ext)s)", cfmt="%(z)i%(leth)s<sup>o</sup>", inline=True),
     "lettcirc": ProblemMacro(letter=1, fmt="%(leth)s$^\\circ$%(ext)s)", cfmt="%(z)i%(leth)s<sup>o</sup>"),
     "zncirc": ProblemMacro(
         problem=1, letter=0, fmt="%(z)i.%(leth)s$^\\circ$%(ext)s)", cfmt="%(z)i%(leth)s<sup>o</sup>", start=True
