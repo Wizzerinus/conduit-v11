@@ -151,7 +151,11 @@ class TextEnv(TextCommand):
         if len(args) != 0:
             raise ValueError(f"Invalid number of arguments for environment {node.name}: expected 0, got {len(args)}.")
 
-        return MetadataNode(self.metaname), self.content.format("".join(str(c) for c in node.contents)), MetadataNode("text")
+        return (
+            MetadataNode(self.metaname),
+            self.content.format("".join(str(c) for c in node.contents)),
+            MetadataNode("text"),
+        )
 
     def get_priority(self) -> int:
         return -1
@@ -184,6 +188,8 @@ class ProblemMacro(LatexCommand):
         letter: int | None = None,
         problem: int | None = None,
         conduit_include: bool = True,
+        standalone: bool = False,
+        start: bool = False,
         cfmt: str = "",
     ):
         self.fmt = fmt
@@ -191,6 +197,8 @@ class ProblemMacro(LatexCommand):
         self.problem = problem
         self.conduit_include = conduit_include
         self.cfmt = cfmt
+        self.newline_after = standalone
+        self.newline_before = standalone or start
 
     @staticmethod
     def update_iterator(context: dict, it_name: str, value: int):
@@ -220,7 +228,14 @@ class ProblemMacro(LatexCommand):
         format_data["ext"] = extra_text
         fmt, cfmt = self.fmt % format_data, self.cfmt % format_data
         fmt = fmt.replace("))", ")")
-        return MetadataNode("problem", num=fmt, conduit_include=self.conduit_include, conduit_num=cfmt)
+        return MetadataNode(
+            "problem",
+            num=fmt,
+            conduit_include=self.conduit_include,
+            conduit_num=cfmt,
+            nlb=self.newline_before,
+            nla=self.newline_after,
+        )
 
     def get_priority(self) -> int:
         return -333

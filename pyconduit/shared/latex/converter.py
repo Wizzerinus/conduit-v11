@@ -1,18 +1,29 @@
 import re
 
+from markdown_it import MarkdownIt
+from mdit_py_plugins.anchors import anchors_plugin
 from TexSoup import TexNode
 from TexSoup.utils import Token
-from markdown_it import MarkdownIt
 
 from pyconduit.models.latex import LatexDocument, LatexObject
 from pyconduit.shared.helpers import get_config
-from pyconduit.shared.latex.core import ErrorCommand, GlobalConfig, ItemExtractor, MetadataNode, ProblemMacro, \
-    TextCommand, \
-    TextEnv, convert_latex
+from pyconduit.shared.latex.core import (
+    ErrorCommand,
+    GlobalConfig,
+    ItemExtractor,
+    MetadataNode,
+    ProblemMacro,
+    TextCommand,
+    TextEnv,
+    convert_latex,
+)
+from pyconduit.shared.latex.markdown_centerline import centerline_plugin
 
 cfg = get_config("latex")
 locale = get_config("localization")
 md_generator = MarkdownIt()
+md_generator.use(anchors_plugin, max_level=3, permalink=True)
+md_generator.use(centerline_plugin)
 
 # These are applied before TexSoup is invoked
 Replacements = {
@@ -46,22 +57,24 @@ BuiltinCommands = {
     "texttt": TextCommand("`#1`", 1, trim_contents=True),
     "ldots": TextCommand("...", 0),
     # problem macros
-    "z": ProblemMacro(problem=1, letter=0, fmt="%(z)i%(ext)s.", cfmt="%(z)i"),
-    "zcirc": ProblemMacro(problem=1, letter=0, fmt="%(z)i$^\\circ$%(ext)s.", cfmt="%(z)i<sup>o</sup>"),
+    "z": ProblemMacro(problem=1, letter=0, fmt="%(z)i%(ext)s.", cfmt="%(z)i", standalone=True),
+    "zcirc": ProblemMacro(problem=1, letter=0, fmt="%(z)i$^\\circ$%(ext)s.", cfmt="%(z)i<sup>o</sup>", standalone=True),
     "leth": ProblemMacro(letter=1, fmt="%(leth)s%(ext)s)", cfmt="%(z)i%(leth)s"),
     "lett": ProblemMacro(letter=1, fmt="%(leth)s%(ext)s)", cfmt="%(z)i%(leth)s"),
     "lethcirc": ProblemMacro(letter=1, fmt="%(leth)s$^\\circ$%(ext)s)", cfmt="%(z)i%(leth)s<sup>o</sup>"),
     "lettcirc": ProblemMacro(letter=1, fmt="%(leth)s$^\\circ$%(ext)s)", cfmt="%(z)i%(leth)s<sup>o</sup>"),
-    "zncirc": ProblemMacro(problem=1, letter=0, fmt="%(z)i.%(leth)s$^\\circ$%(ext)s)", cfmt="%(z)i%(leth)s<sup>o</sup>"),
-    "zn": ProblemMacro(problem=1, letter=0, fmt="%(z)i.%(leth)s%(ext)s)", cfmt="%(z)i%(leth)s"),
-    "zecirc": ProblemMacro(problem=1, letter=-1, fmt="%(z)i$^\\circ$%(ext)s.", conduit_include=False),
-    "ze": ProblemMacro(problem=1, letter=-1, fmt="%(z)i%(ext)s.", conduit_include=False),
+    "zncirc": ProblemMacro(
+        problem=1, letter=0, fmt="%(z)i.%(leth)s$^\\circ$%(ext)s)", cfmt="%(z)i%(leth)s<sup>o</sup>", start=True
+    ),
+    "zn": ProblemMacro(problem=1, letter=0, fmt="%(z)i.%(leth)s%(ext)s)", cfmt="%(z)i%(leth)s", start=True),
+    "zecirc": ProblemMacro(problem=1, letter=-1, fmt="%(z)i$^\\circ$%(ext)s.", conduit_include=False, start=True),
+    "ze": ProblemMacro(problem=1, letter=-1, fmt="%(z)i%(ext)s.", conduit_include=False, start=True),
     # global configuration
     "sheetid": GlobalConfig("sheet_id"),
     "sheetname": GlobalConfig("sheet_name"),
     # environments
-    "center": TextEnv("#1", 1),
-    "centerline": TextCommand("#1", 1),
+    "center": TextEnv("-> #1 <-", 1),
+    "centerline": TextCommand("-> #1 <-", 1),
     "tikzpicture": TextEnv("#1", 1, "tikz"),
     "itemize": ItemExtractor("* %(item)s"),
     # miscellanous
@@ -129,5 +142,5 @@ def build_latex(latext: str) -> LatexDocument:
 
 
 def generate_html(doc: LatexDocument) -> str:
-    md = doc.generate_markdown()
+    md = doc.generate_markdown().replace("-> ###", "### ->")
     return md_generator.render(md)

@@ -32,14 +32,15 @@ def generate_salts():
 
 @cli.command()
 def cleanup():
+    subprocess.run([sys.executable, "-m", "isort", "-l", "120", "--profile", "black", "."])
     subprocess.run([sys.executable, "-m", "black", "-l", "120", "."])
 
 
 @cli.command()
 @asynchronous
 async def create_admin():
+    from pyconduit.models.user import Privileges, RegisterUser
     from pyconduit.shared.datastore import datastore_manager
-    from pyconduit.models.user import RegisterUser, Privileges
     from pyconduit.website.routers.login import register
 
     datastore = datastore_manager.get("accounts")

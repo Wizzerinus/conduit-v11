@@ -38,11 +38,18 @@
             },
 
             methods: {
-                async openSheet(sheet) {
+                async openSheet(sheet, going_back=1, copy_hash=false) {
+                    const hash = copy_hash ? document.location.hash : ""
+                    if (going_back)
+                        window.history.pushState({going_back}, "", `/sheets/viewer/${sheet.id}`)
                     try {
                         const response = await axios.get(`/sheets/file/${sheet.id}`)
                         this.sheet_content = response.data
                         this.current_sheet = sheet.id
+                        if (hash) {
+                            document.location.hash = hash
+                            setTimeout(() => document.getElementById(decodeURI(hash.slice(1))).scrollIntoView(true), 0.1)
+                        }
                     } catch (e1) {
                         console.log(e1)
                     }
@@ -72,6 +79,10 @@
                         content = e1
                     this.alert.set(`Error loading sheet list: ${content}`, "danger")
                 }
+
+                const init_sheet = "{{ sheet.replace('"', '\\"') }}"
+                if (init_sheet)
+                    await this.openSheet({id: init_sheet}, 1, true)
             }
         }
 
@@ -88,6 +99,13 @@
             }
         })
         vue.config.compilerOptions.delimiters = ["[[", "]]"]
-        vue.mount("#viewer-app")
+        const vm = vue.mount("#viewer-app")
+
+        window.addEventListener("popstate", async event => {
+            if (!event.state || !event.state.going_back) return
+            const new_state = window.location.pathname
+            console.log(new_state)
+            await vm.openSheet({id: new_state.split("/").pop()}, 0)
+        })
     </script>
 {% endblock %}

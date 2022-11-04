@@ -6,9 +6,9 @@ from starlette.staticfiles import StaticFiles
 from pyconduit.shared.helpers import get_config
 from pyconduit.website.decorators import get_current_user
 from pyconduit.website.routers.admin import admin_app
-from pyconduit.website.routers.sheets import sheets_app
 from pyconduit.website.routers.index import index_app
 from pyconduit.website.routers.login import login_app
+from pyconduit.website.routers.sheets import sheets_app
 
 cfg = get_config("secrets")
 

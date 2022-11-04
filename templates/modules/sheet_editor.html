@@ -59,7 +59,6 @@
                     let current_sheet
                     if ((current_sheet = this.other_users[user_id]))
                         delete this.other_users_sheets[current_sheet]
-                    console.log(data)
                     if (data.sheet) {
                         this.other_users[user_id] = data.sheet
                         this.other_users_sheets[data.sheet] = data.client

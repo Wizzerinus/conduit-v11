@@ -15,3 +15,8 @@
 	font-size: 40px;
     font-weight: bold;
 }
+
+.header-anchor {
+    color: dimgray;
+    text-decoration: none;
+}

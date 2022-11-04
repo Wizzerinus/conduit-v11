@@ -13,8 +13,14 @@ from pyconduit.models.user import User
 from pyconduit.shared.datastore import datastore_manager, deatomize
 from pyconduit.shared.helpers import get_config
 from pyconduit.shared.latex.converter import build_latex, generate_html
-from pyconduit.website.decorators import RequireScope, SocketManager, get_current_user, get_user_by_token, \
-    make_template_data, templates
+from pyconduit.website.decorators import (
+    RequireScope,
+    SocketManager,
+    get_current_user,
+    get_user_by_token,
+    make_template_data,
+    templates,
+)
 
 sheets_app = FastAPI()
 datastore = datastore_manager.get("sheets")
@@ -31,8 +37,10 @@ async def index_page(request: Request, user: User = Depends(RequireScope("sheets
 
 
 @sheets_app.get("/viewer", response_class=HTMLResponse)
-async def index_page(request: Request, user: None | User = Depends(get_current_user)):
+@sheets_app.get("/viewer/{sheet_id}", response_class=HTMLResponse)
+async def index_page(request: Request, sheet_id: str = "", user: None | User = Depends(get_current_user)):
     data = await make_template_data(request, user)
+    data["sheet"] = sheet_id
     return templates.TemplateResponse("modules/sheet_viewer.html", data)
 
 
@@ -64,9 +72,8 @@ async def create_file(file_data: LatexRequest = Body(...)):
     if file_data.expected_sheet and compiled_latex.sheet_id != file_data.expected_sheet:
         raise HTTPException(
             status_code=400,
-            detail=locale["exceptions"]["latex_sheet_id_mismatch"] % dict(
-                expected=file_data.expected_sheet, got=compiled_latex.sheet_id
-            )
+            detail=locale["exceptions"]["latex_sheet_id_mismatch"]
+            % dict(expected=file_data.expected_sheet, got=compiled_latex.sheet_id),
         )
 
     with datastore.operation():
@@ -118,14 +125,11 @@ async def editor_websocket(websocket: WebSocket):
 
     try:
         file_dict = [{"id": key, "name": value["latex"]["sheet_name"]} for key, value in datastore.items()]
-        await websocket.send_json(
-            {"action": "Init", "files": list(reversed(file_dict)), "open_sheets": socket_context}
-        )
+        await websocket.send_json({"action": "Init", "files": list(reversed(file_dict)), "open_sheets": socket_context})
         while True:
             sheet = await handle.receive_text()
             await socket_manager.broadcast(
-                {"client": user.name, "cid": handle.id, "sheet": sheet, "action": "SetSheet"},
-                exclusions={websocket}
+                {"client": user.name, "cid": handle.id, "sheet": sheet, "action": "SetSheet"}, exclusions={websocket}
             )
             if sheet:
                 socket_context[handle.id] = {"sheet": sheet, "client": user.name}

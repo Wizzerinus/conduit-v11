@@ -21,6 +21,12 @@ class LatexObject(BaseModel, abc.ABC):
     def make_string(self, allow_recursion: bool = True) -> str:
         pass
 
+    def newline_before(self) -> bool:
+        return True
+
+    def newline_after(self) -> bool:
+        return True
+
 
 class LatexText(LatexObject):
     cls = "text"
@@ -42,10 +48,18 @@ class LatexProblem(LatexObject):
     text: str
     num: str
     conduit_num: str
+    nlb: bool
+    nla: bool
     conduit_include: bool = True
 
     def make_string(self, allow_recursion: bool = True) -> str:
         return f"**{self.num}** {self.text}"
+
+    def newline_before(self) -> bool:
+        return self.nlb
+
+    def newline_after(self) -> bool:
+        return self.nla
 
 
 class LatexInclude(LatexObject):
@@ -78,8 +92,19 @@ class LatexDocument(BaseModel):
         return super().parse_obj(data)
 
     def generate_markdown(self, allow_recursion: bool = True) -> str:
-        object_texts = [obj.make_string(allow_recursion) for obj in self.objects]
-        return "\n\n".join(object_texts)
+        object_texts = []
+        for obj in self.objects:
+            current_text = obj.make_string(allow_recursion)
+            if obj.newline_after():
+                current_text += "\n\n"
+            else:
+                current_text += "\\\n"
+
+            if obj.newline_before():
+                current_text = "\n" + current_text
+            object_texts.append(current_text)
+
+        return "".join(object_texts).replace("\\\n\n", "\n\n")
 
 
 class LatexRequest(BaseModel):

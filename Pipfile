@@ -12,9 +12,11 @@ python-multipart = "*"
 itsdangerous = "*"
 texsoup = "*"
 markdown-it-py = "*"
+mdit-py-plugins = "*"
 
 [dev-packages]
 black = "*"
+isort = "*"
 
 [requires]
 python_version = "3.10"
