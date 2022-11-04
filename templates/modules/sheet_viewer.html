@@ -104,7 +104,6 @@
         window.addEventListener("popstate", async event => {
             if (!event.state || !event.state.going_back) return
             const new_state = window.location.pathname
-            console.log(new_state)
             await vm.openSheet({id: new_state.split("/").pop()}, 0)
         })
     </script>
