@@ -7,6 +7,10 @@
     height: calc(100vh - 112px);
 }
 
+#conduit-editor {
+    height: calc(100vh - 295px);
+}
+
 .saved-symbol {
 	position: absolute;
     top: 55px;
@@ -19,4 +23,59 @@
 .header-anchor {
     color: dimgray;
     text-decoration: none;
+}
+
+.table-freezer {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table-freezer th:first-child, .table-freezer td:first-child {
+    position: sticky;
+    left: 0;
+    background-color: lightsteelblue;
+    background-clip: padding-box;
+}
+
+.table-freezer thead, .table-freezer th:first-child {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.table-freezer th {
+    background-clip: padding-box;
+    background-color: lightsteelblue;
+    border: 1px solid dimgray;
+}
+
+.table-freezer td {
+    border: 1px solid dimgray !important;
+}
+
+.table-conduit td:first-child, .table-conduit th:first-child {
+    min-width: 180px;
+}
+
+.table-conduit td:not(:first-child), .table-conduit th:not(:first-child) {
+    width: 47px;
+    min-width: 47px;
+    text-align: center;
+    padding: 2px 2px 10px 2px;
+}
+
+.table-conduit td {
+    border: 1px solid black;
+}
+
+.conduit-filled-cell {
+    background-color: gainsboro !important;
+}
+
+.conduit-unsaved-cell {
+    background-color: lightcoral !important;
+}
+
+.conduit-cell-editable {
+    cursor: pointer;
 }

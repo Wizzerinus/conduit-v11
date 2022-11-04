@@ -10,6 +10,10 @@ navbar:
     url: /sheets/editor
     scope: sheets_edit
 
+  conduit_editor:
+    url: /conduit/editor
+    scope: conduit_edit
+
   admin:
     url: /admin/
     scope: admin

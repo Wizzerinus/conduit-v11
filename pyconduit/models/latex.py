@@ -88,6 +88,7 @@ class LatexDocument(BaseModel):
     orig_doc: str
     sheet_id: str = ""
     sheet_name: str = ""
+    conduit_strategy: str = "none"
 
     @classmethod
     def parse_obj(cls, data):
@@ -117,3 +118,4 @@ class LatexDocument(BaseModel):
 class LatexRequest(BaseModel):
     file_content: str
     expected_sheet: str
+    force_regen: bool = False

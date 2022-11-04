@@ -26,4 +26,9 @@ class EditorBind {
     save(editor) {
         this.vue.saveText(editor.getValue()).then(r => {})
     }
+
+    remove(str) {
+        this.editor.find(str, {backwards: true, wrap: true})
+        this.editor.replaceAll("")
+    }
 }

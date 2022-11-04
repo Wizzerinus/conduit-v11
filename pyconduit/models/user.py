@@ -26,7 +26,7 @@ class User(BaseModel):
 class UserSensitive(BaseModel):
     login: str
     name: str
-    privileges: Privileges
+    privileges: Privileges = None
 
 
 class RegisterUser(BaseModel):

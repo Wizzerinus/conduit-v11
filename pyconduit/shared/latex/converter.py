@@ -72,6 +72,7 @@ BuiltinCommands = {
     # global configuration
     "sheetid": GlobalConfig("sheet_id"),
     "sheetname": GlobalConfig("sheet_name"),
+    "cdtexport": GlobalConfig("conduit-strategy"),
     # environments
     "center": TextEnv("-> #1 <-", 1),
     "centerline": TextCommand("-> #1 <-", 1),
@@ -119,6 +120,8 @@ def build_latex(latext: str) -> LatexDocument:
         doc.sheet_name = sheet_name
     else:
         raise ValueError(locale["exceptions"]["no_sheet_name"])
+
+    doc.conduit_strategy = context.get("conduit-strategy", "none").lower()
 
     current_metadata = MetadataNode("text")
     for node in soup.contents:

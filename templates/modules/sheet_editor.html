@@ -36,7 +36,9 @@
     <script src="/static/wssbind.js"></script>
 
     <script>
-        const InitialText = "\\sheetid{}\n\\sheetname{New sheet}"
+        const cdtexport_help = "% The argument can be one of 'none', 'once', 'force' and 'cache-optimal', default is 'none'.\n" +
+            "% I recommend using 'none' before the sheet exists, 'once' to generate it, and 'cache-optimal' if you add a new problem."
+        const InitialText = `\\sheetid{}\n\\sheetname{New sheet}\n${cdtexport_help}\n\\cdtexport{none}`
         let wss, editor
         const app = {
             data() {
@@ -75,7 +77,7 @@
                 ws_onNewSheet(data) {
                     this.sheet_list.unshift(data)
                 },
-                ws_DeleteSheet(data) {
+                ws_onDeleteSheet(data) {
                     this.sheet_list = this.sheet_list.filter(sheet => sheet.id !== data.id)
                 },
 
@@ -165,14 +167,26 @@
                 async saveText(text) {
                     if (!this.unsaved_changes)
                         return
+
+                    let force_regen = false
+                    if (text.indexOf("__FORCE_REGEN__") > -1) {
+                        force_regen = true
+                        text = text.replace("__FORCE_REGEN__", "")
+                        editor.remove("__FORCE_REGEN__")
+                    }
+
                     try {
                         const response = await axios.post("/sheets/edit", {
-                            file_content: text, expected_sheet: this.current_sheet || ""
+                            file_content: text, expected_sheet: this.current_sheet || "", force_regen
                         })
+                        if (response.data.warning) {
+                            this.alert.set(`{{ locale.sheet_editor.warning_found }}${response.data.warning}`, "warning")
+                        } else {
+                            this.alert.clear()
+                        }
                         this.unsaved_changes = false
                         this.current_sheet = response.data.sheet_id
                         wss.send(this.current_sheet)
-                        this.alert.clear()
                     } catch(e1) {
                         this.alert.set(e1.response.data.detail, "danger")
                     }

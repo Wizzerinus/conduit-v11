@@ -1,0 +1,191 @@
+{% extends "template.html" %}
+{% set title = "conduit_editor" %}
+{% block main %}
+    <h2>{{ locale.titles.conduit_editor }}</h2>
+
+    <div id="cdt-editor-app">
+        {% include "parts/vue-alert.html" %}
+
+        <div v-if="current_sheet">
+            <div class="table-responsive" id="conduit-editor">
+                <table class="table table-freezer table-conduit table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>[[ current_sheet.id ]] [[ current_sheet.name.slice(0, 13) ]]</th>
+                            <th v-for="problem in current_sheet.conduit.problem_names" v-html="problem"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="user in current_sheet.users">
+                            <td>[[ user.name ]]</td>
+                            <td v-for="(value, index) in current_sheet.conduit.content[user.login]" class="conduit-cell-editable"
+                                :class="{
+                                    'conduit-filled-cell': value !== '' && !unsaved_changes[user.login][index],
+                                    'conduit-unsaved-cell': unsaved_changes[user.login][index]
+                                }"
+                                :title="getCellTitle(value)" @click="fillCell(user, index)">
+                                [[ getCellValue(value) ]]
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="btn-toolbar position-absolute bottom-0 start-0 mb-4 ms-4">
+            <div class="input-group me-2">
+                <input type="text" class="form-control" placeholder="{{ locale.conduit.set_for }}" v-model="teacher_setting">
+            </div>
+
+            <div class="btn-group me-2">
+                <button class="btn btn-outline-primary" @click="saveConduit">{{ locale.forms.btn_save }}</button>
+                <button v-for="(sheet, index) in sheet_list" :title="getTitle(sheet)" type="button" class="btn"
+                        :disabled="isDisabled(sheet)" :class="getColor(sheet, index)" @click="openSheet(sheet)">
+                    [[ sheet.name ]]
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/wssbind.js"></script>
+    <script>
+    const username = '{{ user.name.replace("'", "\\'") }}'
+    let wss
+    const app = {
+        data() {
+            return {
+                alert: new AlertModule(),
+                current_sheet: null,
+                sheet_list: [],
+                unsaved_changes: {},
+                // these are used for the sheet edit websocket, to prevent editing latex at the same time with the conduit
+                other_users: {},
+                other_users_sheets: {},
+                teacher_setting: username,
+            }
+        },
+        methods: {
+            ws_onSetSheet(data) {
+                const user_id = data.cid
+                let current_sheet
+                if ((current_sheet = this.other_users[user_id]))
+                    delete this.other_users_sheets[current_sheet]
+                if (data.sheet) {
+                    this.other_users[user_id] = data.sheet
+                    this.other_users_sheets[data.sheet] = data.client
+                }
+            },
+            ws_onInit(data) {
+                this.sheet_list = []
+                for (const item of data.files) {
+                    if (item.has_conduit) {
+                        this.sheet_list.push(item)
+                    }
+                }
+                for (const handle_id of Object.keys(data.open_sheets)) {
+                    const {client, sheet} = data.open_sheets[handle_id]
+                    this.other_users[handle_id] = sheet
+                    this.other_users_sheets[sheet] = client
+                }
+            },
+            ws_onNewSheet(data) {},
+            ws_onDeleteSheet(data) {
+                this.sheet_list = this.sheet_list.filter(sheet => sheet.id !== data.id)
+            },
+
+            isDisabled(sheet) {
+                return this.other_users_sheets[sheet.id] !== undefined
+            },
+            getTitle(sheet) {
+                const username = this.other_users_sheets[sheet.id]
+                if (username === undefined)
+                    return ""
+                return `{{ locale.sheet_editor.sheet_in_use }} ${username}`
+            },
+            getColor(sheet, index) {
+                if (this.current_sheet && sheet.id === this.current_sheet.id)
+                    return "btn-outline-success"
+
+                if (this.isDisabled(sheet))
+                    return "btn-outline-dark"
+                if (index <= 3)
+                    return "btn-outline-primary"
+                return "btn-outline-secondary"
+            },
+
+            getCellValue(val) {
+                return val.split(";", 1)[0]
+            },
+            getCellTitle(val) {
+                const parts = val.split(";")
+                if (parts.length <= 1)
+                    return ""
+                let value = `{{ locale.conduit.submit_date }}${parts[1]}\n` +
+                            `{{ locale.conduit.teacher }}${parts[2]}`
+                if (parts[3] && parts[3] !== parts[2])
+                    value += `\n{{ locale.conduit.editor }}${parts[3]}`
+                return value
+            },
+            fillCell(user, index) {
+                const date = new Date().toLocaleDateString("ru-RU", {year: "numeric", month: "2-digit", day: "2-digit"})
+                const old_value = this.getCellValue(this.current_sheet.conduit.content[user.login][index])
+                const mark = old_value ? "" : "1"
+                const value = `${mark};${date};${this.teacher_setting};${username}`
+                this.current_sheet.conduit.content[user.login][index] = value
+                this.unsaved_changes[user.login][index] = value
+            },
+
+            async saveConduit() {
+                if (!this.current_sheet) return
+                try {
+                    await axios.post(`/conduit/edit/${this.current_sheet.id}`, {unsaved_changes: this.unsaved_changes})
+                    this.unsaved_changes = {}
+                    for (const user of this.current_sheet.users) {
+                        this.unsaved_changes[user.login] = {}
+                    }
+                    this.alert.set("Successfully saved conduit!", "success")
+                } catch(e1) {
+                    let content = e1
+                    try {
+                        content = e1.response.data.detail
+                    } catch(e2) {}
+                    if (!content)
+                        content = e1
+                    this.alert.set(`Error while saving: ${content}`, "danger")
+                }
+            },
+            async openSheet(sheet) {
+                if (this.unsaved_changes.length > 0 && this.last_sheet !== this.current_sheet.id) {
+                    this.alert.show("{{ locale.sheet_editor.unsaved_changes }}", "warning")
+                    this.last_sheet = this.current_sheet.id
+                    return
+                }
+
+                this.last_sheet = ""
+                this.alert.clear()
+                try {
+                    const response = await axios.get(`/conduit/content/${sheet.id}`)
+                    this.current_sheet = response.data
+                    this.unsaved_changes = {}
+                    for (const user of this.current_sheet.users) {
+                        this.unsaved_changes[user.login] = {}
+                    }
+                    wss.send(sheet.id)
+                } catch (e1) {
+                    let content = e1
+                    try {
+                        content = e1.response.data.detail
+                    } catch(e2) {}
+                    if (!content)
+                        content = e1
+                    this.alert.set(`Error opening sheet ${sheet.id}: ${content}`, "danger")
+                }
+            },
+        }
+    }
+
+    const vue = Vue.createApp(app)
+    vue.config.compilerOptions.delimiters = ["[[", "]]"]
+    const vue_mount = vue.mount("#cdt-editor-app")
+    wss = new WebsocketBind(vue_mount, "/sheets/editor")
+    </script>
+{% endblock %}

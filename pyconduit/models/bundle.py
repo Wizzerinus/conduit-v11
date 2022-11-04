@@ -1,10 +1,12 @@
 from pydantic import BaseModel
 
+from pyconduit.models.conduit import Conduit
 from pyconduit.models.latex import LatexDocument
 
 
 class BundleDocument(BaseModel):
     latex: LatexDocument = None
+    conduit: Conduit = None
 
     @classmethod
     def parse_obj(cls, data):

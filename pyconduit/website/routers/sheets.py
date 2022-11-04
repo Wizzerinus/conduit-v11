@@ -10,6 +10,7 @@ from websockets.exceptions import WebSocketException
 from pyconduit.models.bundle import BundleDocument
 from pyconduit.models.latex import LatexRequest
 from pyconduit.models.user import User
+from pyconduit.shared.conduit_regeneration import regen_strategies
 from pyconduit.shared.datastore import datastore_manager, deatomize
 from pyconduit.shared.helpers import get_config
 from pyconduit.shared.latex.converter import build_latex, generate_html
@@ -57,17 +58,36 @@ async def get_latex_content(file_id: str):
     return datastore[file_id]["latex"]["orig_doc"]
 
 
-@sheets_app.post("/edit", dependencies=[Depends(RequireScope("sheets_edit"))])
-async def create_file(file_data: LatexRequest = Body(...)):
+@sheets_app.post("/edit")
+async def create_file(file_data: LatexRequest = Body(...), user: User = Depends(RequireScope("sheets_edit"))):
+    new_conduit: None | dict = None
+    warning = ""
     try:
         compiled_latex = build_latex(file_data.file_content)
+
+        if compiled_latex.sheet_id in datastore:
+            bundle_data = BundleDocument.parse_obj(deatomize(datastore[compiled_latex.sheet_id]))
+        else:
+            bundle_data = BundleDocument(latex=compiled_latex)
+
+        if user.privileges.conduit_edit:
+            if compiled_latex.conduit_strategy not in regen_strategies:
+                raise ValueError("Invalid conduit strategy: %s" % compiled_latex.conduit_strategy)
+
+            need_replace, warning = regen_strategies[compiled_latex.conduit_strategy](bundle_data, file_data)
+            if need_replace:
+                new_conduit = bundle_data.conduit.dict()
+
         html_content = generate_html(compiled_latex)
     except ValidationError:
+        logger.exception("Latex invariant error")
         raise HTTPException(status_code=500, detail=locale["exceptions"]["latex_invariant_error"])
     except (TypeError, EOFError) as e:
+        logger.exception("Latex syntax error")
         raise HTTPException(status_code=400, detail=locale["exceptions"]["latex_syntax_error"] % dict(message=e))
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=locale["exceptions"]["latex_semantic_error"] % dict(message=e))
+        logger.exception("Latex semantic error")
+        raise HTTPException(status_code=422, detail=locale["exceptions"]["latex_semantic_error"] % dict(message=e))
 
     if file_data.expected_sheet and compiled_latex.sheet_id != file_data.expected_sheet:
         raise HTTPException(
@@ -83,8 +103,10 @@ async def create_file(file_data: LatexRequest = Body(...)):
                 {"action": "NewSheet", "id": compiled_latex.sheet_id, "name": compiled_latex.sheet_name}
             )
         bundle["latex"] = compiled_latex.dict()
+        if new_conduit:
+            bundle["conduit"] = new_conduit
 
-    return {"success": True, "html_content": html_content, "sheet_id": compiled_latex.sheet_id}
+    return {"success": True, "html_content": html_content, "sheet_id": compiled_latex.sheet_id, "warning": warning}
 
 
 @sheets_app.get("/file/{file_id}", response_class=HTMLResponse)
@@ -122,13 +144,16 @@ async def editor_websocket(websocket: WebSocket):
         await websocket.close(code=1008)
         return
 
-    if user is None or not user.privileges.sheets_edit:
+    if user is None or (not user.privileges.sheets_edit and not user.privileges.conduit_edit):
         raise WebSocketDisconnect(code=1008)
 
     handle = await socket_manager.connect(websocket)
 
     try:
-        file_dict = [{"id": key, "name": value["latex"]["sheet_name"]} for key, value in datastore.items()]
+        file_dict = [
+            {"id": key, "name": value["latex"]["sheet_name"], "has_conduit": "conduit" in value}
+            for key, value in datastore.items()
+        ]
         await websocket.send_json({"action": "Init", "files": list(reversed(file_dict)), "open_sheets": socket_context})
         while True:
             sheet = await handle.receive_text()

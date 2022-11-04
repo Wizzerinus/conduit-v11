@@ -3,6 +3,7 @@ titles:
   login: Вход в систему
   admin: Администрация
   sheet_editor: Редактор листков
+  conduit_editor: Редактор плюсника
 
   edit_user_modal: Редактирование пользователя
   bulk_create_users_modal: Создание пользователей
@@ -10,6 +11,7 @@ navbar:
   index: Главная
   sheet_editor: Редактор листков
   sheet_viewer: Просмотр листков
+  conduit_editor: Редактор плюсника
   admin: Администрация
   logout: Выйти
 exceptions:
@@ -27,6 +29,9 @@ exceptions:
   file_not_found: Файл '%(filename)s' не найден!
   latex_sheet_id_mismatch: Идентификатор листка в LaTeX не совпадает с ожидаемым! Ожидалось '%(expected)s', получено '%(actual)s'. Сохранение отменено для сохранения данных.
   no_latex_sheet: В файле '%(filename)s' нет LaTeX объекта!
+  no_conduit: В файле '%(filename)s' нет кондуита!
+  file_corrupted: Файл '%(filename)s' поврежден!
+  invalid_conduit_data: Не удалось сохранить кондуит! Обратитесь к Сане.
 messages:
   login_for_full_access: Войдите в систему для полного доступа к сайту.
   logged_in_as: "Вы вошли в систему как %(name)s. Ваши права доступа:"
@@ -65,3 +70,9 @@ sheet_editor:
   unsaved_changes: В файле есть несохранённые изменения! Используйте Ctrl+S, чтобы их сохранить, или нажмите на тот же листок ещё раз, чтобы их сбросить.
   delete_dangerous: Нажмите на эту кнопку ещё раз, чтобы удалить листок.
   delete_sheet: Если вы точно хотите удалить листок, введите здесь его номер/ID.
+  warning_found: "Компилятор выдал предупреждения при сохранении: "
+conduit:
+  submit_date: "Дата сдачи: "
+  teacher: "Принимающий: "
+  editor: "Оценку выставил "
+  set_for: Выставляю за

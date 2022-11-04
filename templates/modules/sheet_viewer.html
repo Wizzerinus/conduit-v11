@@ -2,8 +2,6 @@
 {% set title = "sheet_viewer" %}
 {% block main %}
     <div id="viewer-app" class="mt-2">
-        <div class="saved-symbol" v-if="unsaved_changes">*</div>
-
         <div class="row">
             <div class="col-3 list-group">
                 <button v-for="(sheet, index) in sheet_list" type="button" class="list-group-item list-group-item-action"
