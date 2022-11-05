@@ -137,9 +137,9 @@ class FormulaProvider:
                 elif i > max_value:
                     values_recalc.append(1)
                 elif i < mid_value:
-                    values_recalc.append((i - min_value) / (mid_value - min_value))
+                    values_recalc.append(1/2 * (i - min_value) / (mid_value - min_value))
                 else:
-                    values_recalc.append((i - mid_value) / (max_value - mid_value) + 1 / 2)
+                    values_recalc.append(1/2 * (i - mid_value) / (max_value - mid_value) + 1 / 2)
 
             colors = [inter(i).to_string() for i in values_recalc]
 
