@@ -2,8 +2,8 @@ const WebsocketMessage = "Lost connection to the websocket..."
 const ConnectionMessage = "Connecting to the websocket..."
 
 const PingPeriod = 25000
-const ReconnectPeriod = 2000
-const PongDelay = 1000
+const ReconnectPeriod = 5000
+const PongDelay = 2000
 
 class WebsocketBind {
     constructor(app, path) {

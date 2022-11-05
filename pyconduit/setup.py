@@ -80,7 +80,7 @@ def import_conduits(sheet_id: str, user_order_file: str, conduit_tsv: str):
     user_order = [username_dict[x] for x in user_order]
 
     with open(conduit_tsv) as f:
-        conduit_data = [line.split("\t") for line in f]
+        conduit_data = [line.replace(" ").split("\t") for line in f]
 
     with datastore_manager.get("sheets").operation() as ds:
         sheets = ds.sheets
