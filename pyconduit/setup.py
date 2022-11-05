@@ -27,7 +27,7 @@ def cleanup():
 
 
 @cli.command()
-async def create_admin():
+def create_admin():
     from pyconduit.models.user import Privileges, RegisterUser
     from pyconduit.shared.datastore import datastore_manager
     from pyconduit.website.routers.login import register
@@ -43,7 +43,7 @@ async def create_admin():
     privileges = Privileges(
         admin=True, conduit_edit=True, sheets_edit=True, conduit_generation=False, formula_edit=True
     )
-    await register(RegisterUser(login=username, password=password, name="Administrator", privileges=privileges))
+    register(RegisterUser(login=username, password=password, name="Administrator", privileges=privileges))
 
 
 if __name__ == "__main__":
