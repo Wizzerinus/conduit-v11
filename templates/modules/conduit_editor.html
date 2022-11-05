@@ -4,9 +4,7 @@
     <h2>{{ locale.titles.conduit_editor }}</h2>
 
     <div id="cdt-editor-app">
-        {% include "parts/vue-alert.html" %}
-
-        <div v-if="current_sheet">
+        <div v-if="current_sheet" class="mb-4">
             <div class="table-responsive" id="conduit-editor">
                 <table class="table table-freezer table-conduit table-hover">
                     <thead>
@@ -67,6 +65,8 @@
             </div>
         </div>
         {% endif %}
+
+        {% include "parts/vue-alert.html" %}
     </div>
     {% if user.privileges.formula_edit %}
     <div id="ace-editor-formulas"></div>
@@ -143,7 +143,7 @@
                 if (userdata === undefined)
                     return ""
 
-                const username = Object.values(userdata.users).join("\m")
+                const username = Object.values(userdata.users).join("\n")
                 return `{{ locale.common.sheet_in_use }}\n${username}`
             },
             getColor(sheet, index) {
