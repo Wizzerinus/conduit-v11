@@ -9,4 +9,5 @@ EHD_CONFIG_PROFILE=production flock -Fw $FLOCKTIMEOUT PIDlock2 \
   pipenv run uvicorn \
     --port 7554 \
     --host 0.0.0.0 \
+    --workers 1 \
     pyconduit.website.website:app
