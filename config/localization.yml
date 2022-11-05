@@ -47,7 +47,7 @@ exceptions:
   invalid_conduit_data: Не удалось сохранить кондуит! Обратитесь к Сане.
   stacking_limit: Превышен лимит пост-командного спуска!
   unknown_node: Неизвестный блок на верхнем уровне - %(node)s (тип %(type)s)!
-  invalid_argcount: Некорректное количество аргументов к команде %(name)d! Ожидалось %(expected)d, получено %(actual)d.
+  invalid_argcount: Некорректное количество аргументов к команде %(name)s! Ожидалось %(expected)d, получено %(actual)d.
   invalid_env_argcount: Некорректное количество аргументов к окружению %(name)d! Ожидалось 0, получено %(actual)d.
   itemextract_error: Блоки \itemize и \enumerate должны начинаться с \item, а не с %(name)s!
   command_banned: Команда '%(name)s' запрещена! Используйте '%(instead)s' вместо нее.
