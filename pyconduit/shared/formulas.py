@@ -44,17 +44,6 @@ def read_queue(queue: multiprocessing.Queue) -> str:
             break
 
 
-def interpolate(
-    low_int: Interpolator, high_int: Interpolator, low_value: int, mid_value: int, high_value: int, value: int
-) -> ColorTuple:
-    low_half = Color.interpolate([Color(*low), Color(*mid)])
-    high_half = Color.interpolate([Color(*mid), Color(*high)])
-    if value < mid_value:
-        return low_half.interpolate(mid_value - from_value, mid_value - value).rgb
-    else:
-        return high_half.interpolate(to_value - mid_value, value - mid_value).rgb
-
-
 class FormulaProvider:
     def __init__(self, doc: ConduitContent):
         self.doc = doc
