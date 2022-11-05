@@ -59,7 +59,7 @@
 }
 
 .table-conduit td:first-child, .table-conduit th:first-child {
-    min-width: 180px;
+    min-width: 220px;
 }
 
 .table-conduit td:not(:first-child), .table-conduit th:not(:first-child) {
