@@ -47,15 +47,15 @@ async def index_page(request: Request, sheet_id: str = "", user: None | User = D
 
 @sheets_app.get("/list")
 async def sheet_list():
-    file_dict = [{"id": key, "name": value["latex"]["sheet_name"]} for key, value in datastore.items()]
+    file_dict = [{"id": key, "name": value["latex"]["sheet_name"]} for key, value in datastore.sheets.items()]
     return list(reversed(file_dict))
 
 
 @sheets_app.get("/content/{file_id}", response_class=PlainTextResponse)
 async def get_latex_content(file_id: str):
-    if file_id not in datastore:
+    if file_id not in datastore.sheets:
         raise HTTPException(status_code=404, detail=locale["exceptions"]["file_not_found"] % dict(filename=file_id))
-    return datastore[file_id]["latex"]["orig_doc"]
+    return datastore.sheets[file_id].latex.orig_doc
 
 
 @sheets_app.post("/edit")
@@ -65,8 +65,8 @@ async def create_file(file_data: LatexRequest = Body(...), user: User = Depends(
     try:
         compiled_latex = build_latex(file_data.file_content)
 
-        if compiled_latex.sheet_id in datastore:
-            bundle_data = BundleDocument.parse_obj(deatomize(datastore[compiled_latex.sheet_id]))
+        if compiled_latex.sheet_id in datastore.sheets:
+            bundle_data = BundleDocument.parse_obj(deatomize(datastore.sheets[compiled_latex.sheet_id]))
         else:
             bundle_data = BundleDocument(latex=compiled_latex)
 
@@ -97,7 +97,7 @@ async def create_file(file_data: LatexRequest = Body(...), user: User = Depends(
         )
 
     with datastore.operation():
-        bundle = datastore.get(compiled_latex.sheet_id, {})
+        bundle = datastore.sheets.get(compiled_latex.sheet_id, {})
         if not bundle:
             await socket_manager.broadcast(
                 {"action": "NewSheet", "id": compiled_latex.sheet_id, "name": compiled_latex.sheet_name}
@@ -111,11 +111,11 @@ async def create_file(file_data: LatexRequest = Body(...), user: User = Depends(
 
 @sheets_app.get("/file/{file_id}", response_class=HTMLResponse)
 async def read_file(file_id: str):
-    if file_id not in datastore:
+    if file_id not in datastore.sheets:
         raise HTTPException(status_code=404, detail=locale["exceptions"]["file_not_found"] % dict(filename=file_id))
 
     try:
-        bundle_document = BundleDocument.parse_obj(deatomize(datastore[file_id]))
+        bundle_document = BundleDocument.parse_obj(deatomize(datastore.sheets[file_id]))
     except ValidationError as e:
         logger.error("Invalid bundle document: %s", e)
         raise HTTPException(status_code=500, detail=locale["exceptions"]["latex_invariant_error"])
@@ -127,10 +127,10 @@ async def read_file(file_id: str):
 
 @sheets_app.delete("/{file_id}", dependencies=[Depends(RequireScope("sheets_edit"))])
 async def delete_file(file_id: str):
-    if file_id not in datastore:
+    if file_id not in datastore.sheets:
         raise HTTPException(status_code=404, detail=locale["exceptions"]["file_not_found"] % dict(filename=file_id))
-    with datastore.operation():
-        del datastore[file_id]
+    with datastore.sheets.operation():
+        del datastore.sheets[file_id]
     await socket_manager.broadcast({"action": "DeleteSheet", "id": file_id})
     return {"success": True}
 
@@ -152,11 +152,21 @@ async def editor_websocket(websocket: WebSocket):
     try:
         file_dict = [
             {"id": key, "name": value["latex"]["sheet_name"], "has_conduit": "conduit" in value}
-            for key, value in datastore.items()
+            for key, value in datastore.sheets.items()
         ]
+
         await websocket.send_json({"action": "Init", "files": list(reversed(file_dict)), "open_sheets": socket_context})
         while True:
             sheet = await handle.receive_text()
+            if sheet == "__formulas":
+                socket_context["__formulas"] = handle.id
+                await socket_manager.broadcast({"action": "OpenFormulas"}, exclusions={websocket})
+                continue
+            if sheet == "__formulas_exit":
+                socket_context.pop("__formulas", None)
+                await socket_manager.broadcast({"action": "CloseFormulas"}, exclusions={websocket})
+                continue
+
             await socket_manager.broadcast(
                 {"client": user.name, "cid": handle.id, "sheet": sheet, "action": "SetSheet"}, exclusions={websocket}
             )
@@ -168,5 +178,8 @@ async def editor_websocket(websocket: WebSocket):
         pass
     finally:
         socket_manager.disconnect(websocket)
+        if socket_context.get("__formulas") == handle.id:
+            socket_context.pop("__formulas")
+            await socket_manager.broadcast({"action": "CloseFormulas"})
         await socket_manager.broadcast({"client": user.name, "cid": handle.id, "sheet": None, "action": "SetSheet"})
         socket_context.pop(handle.id, None)

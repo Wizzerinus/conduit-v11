@@ -46,7 +46,7 @@ async def create_admin():
     datastore = datastore_manager.get("accounts")
     username = input("Username: ")
     with datastore.operation():
-        accounts = datastore.get("accounts", {})
+        accounts = datastore.accounts
         if username in accounts:
             del accounts[username]
 

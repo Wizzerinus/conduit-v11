@@ -2,6 +2,7 @@ ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.12.5/")
 
 class EditorBind {
     constructor(vue, editor_id, editor_mode) {
+        this.editor_id = editor_id
         this.editor = ace.edit(editor_id)
         this.editor.session.setUseSoftTabs(true)
         this.editor.session.setUseWrapMode(true)
@@ -15,6 +16,14 @@ class EditorBind {
             bindKey: {win: "Ctrl-S", mac: "Command-S"},
             exec: this.save.bind(this),
         })
+    }
+
+    teleport(where) {
+        // This is a crutch that fixes Vue being not compatible with Ace for some reason
+        // It's not a good solution, but it works
+        const ace_editor = document.getElementById(this.editor_id)
+        const ace_teleport = document.getElementById(where)
+        ace_teleport.appendChild(ace_editor)
     }
 
     setText(text) {

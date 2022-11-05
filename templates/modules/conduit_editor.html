@@ -8,7 +8,7 @@
 
         <div v-if="current_sheet">
             <div class="table-responsive" id="conduit-editor">
-                <table class="table table-freezer table-conduit table-striped table-hover">
+                <table class="table table-freezer table-conduit table-hover">
                     <thead>
                         <tr>
                             <th>[[ current_sheet.id ]] [[ current_sheet.name.slice(0, 13) ]]</th>
@@ -18,11 +18,11 @@
                     <tbody>
                         <tr v-for="user in current_sheet.users">
                             <td>[[ user.name ]]</td>
-                            <td v-for="(value, index) in current_sheet.conduit.content[user.login]" class="conduit-cell-editable"
+                            <td v-for="(value, index) in current_sheet.conduit.content[user.login]"
                                 :class="{
-                                    'conduit-filled-cell': value !== '' && !unsaved_changes[user.login][index],
-                                    'conduit-unsaved-cell': unsaved_changes[user.login][index]
-                                }"
+                                    'conduit-unsaved-cell': isCellUnsaved(user.login, index),
+                                    'conduit-cell-editable': isCellEditable(user.login, index)
+                                }" :style="getStyle(user.login, index)"
                                 :title="getCellTitle(value)" @click="fillCell(user, index)">
                                 [[ getCellValue(value) ]]
                             </td>
@@ -37,26 +37,52 @@
             </div>
 
             <div class="btn-group me-2">
-                <button class="btn btn-outline-primary" @click="saveConduit">{{ locale.common.btn_save }}</button>
+                <button class="btn btn-success" @click="saveConduit">{{ locale.common.btn_save }}</button>
+                <button class="btn btn-secondary" @click="loadFormulas" data-bs-toggle="modal"
+                        data-bs-target="#modal-formula-editor" :disabled="isDisabled('__formulas')">
+                    {{ locale.pages.conduit.formulas }}
+                </button>
                 <button v-for="(sheet, index) in sheet_list" :title="getTitle(sheet)" type="button" class="btn"
                         :disabled="isDisabled(sheet)" :class="getColor(sheet, index)" @click="openSheet(sheet)">
                     [[ sheet.name ]]
                 </button>
             </div>
         </div>
+
+        <div id="modal-formula-editor" class="modal fade" tabindex="-1">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{ locale.titles.formula_editor_modal }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <div class="saved-symbol" style="right: 45px; top: 5px" v-if="unsaved_changes">*</div>
+                    </div>
+                    <div class="modal-body">
+                        <div id="ace-editor-teleport"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+    <div id="ace-editor-formulas"></div>
 
     <script src="/static/wssbind.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.12.5/ace.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.12.5/mode-python.min.js"></script>
+    <script src="/static/editorbind.js"></script>
+
     <script>
     const username = '{{ user.name.replace("'", "\\'") }}'
-    let wss
+    let wss, editor
     const app = {
         data() {
             return {
                 alert: new AlertModule(),
                 current_sheet: null,
                 sheet_list: [],
-                unsaved_changes: {},
+                unsaved_commits: {},
+                have_unsaved_commits: false,
+                unsaved_changes: false,
                 // these are used for the sheet edit websocket, to prevent editing latex at the same time with the conduit
                 other_users: {},
                 other_users_sheets: {},
@@ -82,6 +108,10 @@
                     }
                 }
                 for (const handle_id of Object.keys(data.open_sheets)) {
+                    if (handle_id === "__formulas") {
+                        this.other_users_sheets[handle_id] = 1
+                        continue
+                    }
                     const {client, sheet} = data.open_sheets[handle_id]
                     this.other_users[handle_id] = sheet
                     this.other_users_sheets[sheet] = client
@@ -92,8 +122,11 @@
                 this.sheet_list = this.sheet_list.filter(sheet => sheet.id !== data.id)
             },
 
+            ws_onOpenFormulas() {this.other_users_sheets["__formulas"] = 1},
+            ws_onCloseFormulas() {delete this.other_users_sheets["__formulas"]},
+
             isDisabled(sheet) {
-                return this.other_users_sheets[sheet.id] !== undefined
+                return this.other_users_sheets[sheet.id] !== undefined || this.other_users_sheets[sheet] !== undefined
             },
             getTitle(sheet) {
                 const username = this.other_users_sheets[sheet.id]
@@ -118,44 +151,59 @@
             getCellTitle(val) {
                 const parts = val.split(";")
                 if (parts.length <= 1)
-                    return ""
+                    return null
                 let value = `{{ locale.pages.conduit.submit_date }}${parts[1]}\n` +
                             `{{ locale.pages.conduit.teacher }}${parts[2]}`
                 if (parts[3] && parts[3] !== parts[2])
                     value += `\n{{ locale.pages.conduit.editor }}${parts[3]}`
                 return value
             },
+            getStyle(login, index) {
+                const problem = this.current_sheet.conduit.problem_names[index]
+                if (!this.current_sheet.styles[login])
+                    return null
+                const value = this.current_sheet.styles[login][problem]
+                if (!value)
+                    return null
+                return value
+            },
             fillCell(user, index) {
+                if (!this.isCellEditable(user.login, index))
+                    return
+
                 const date = new Date().toLocaleDateString("ru-RU", {year: "numeric", month: "2-digit", day: "2-digit"})
                 const old_value = this.getCellValue(this.current_sheet.conduit.content[user.login][index])
-                const mark = old_value ? "" : "1"
+                const mark = old_value && old_value !== "0" ? "0" : "1"
                 const value = `${mark};${date};${this.teacher_setting};${username}`
                 this.current_sheet.conduit.content[user.login][index] = value
-                this.unsaved_changes[user.login][index] = value
+                this.unsaved_commits[user.login][this.current_sheet.real_indices[index]] = value
+                this.have_unsaved_commits = true
+            },
+            isCellEditable(login, index) {
+                return login[0] !== '_' && this.current_sheet.real_indices[index] !== -1
+            },
+            isCellUnsaved(login, index) {
+                index = this.current_sheet.real_indices[index]
+                return this.unsaved_commits[login] && this.unsaved_commits[login][index]
             },
 
             async saveConduit() {
                 if (!this.current_sheet) return
                 try {
-                    await axios.post(`/conduit/edit/${this.current_sheet.id}`, {unsaved_changes: this.unsaved_changes})
-                    this.unsaved_changes = {}
+                    await axios.post(`/conduit/edit/${this.current_sheet.id}`, {unsaved_changes: this.unsaved_commits})
+                    this.unsaved_commits = {}
+                    this.have_unsaved_commits = false
                     for (const user of this.current_sheet.users) {
-                        this.unsaved_changes[user.login] = {}
+                        this.unsaved_commits[user.login] = {}
                     }
                     this.alert.set("{{ locale.pages.conduit.successfully_saved }}", "success")
                 } catch(e1) {
-                    let content = e1
-                    try {
-                        content = e1.response.data.detail
-                    } catch(e2) {}
-                    if (!content)
-                        content = e1
-                    this.alert.set(`{{ locale.pages.conduit.error_while_saving }}${content}`, "danger")
+                    this.alert.logError(`{{ locale.pages.conduit.error_while_saving }}`, e1)
                 }
             },
             async openSheet(sheet) {
-                if (this.unsaved_changes.length > 0 && this.last_sheet !== this.current_sheet.id) {
-                    this.alert.show("{{ locale.common.unsaved_changes }}", "warning")
+                if (this.have_unsaved_commits > 0 && this.last_sheet !== this.current_sheet.id) {
+                    this.alert.set("{{ locale.common.unsaved_changes }}", "warning")
                     this.last_sheet = this.current_sheet.id
                     return
                 }
@@ -165,21 +213,48 @@
                 try {
                     const response = await axios.get(`/conduit/content/${sheet.id}`)
                     this.current_sheet = response.data
-                    this.unsaved_changes = {}
+                    this.unsaved_commits = {}
+                    this.have_unsaved_commits = false
                     for (const user of this.current_sheet.users) {
-                        this.unsaved_changes[user.login] = {}
+                        this.unsaved_commits[user.login] = {}
                     }
                     wss.send(sheet.id)
+                    if (this.current_sheet.formula_error) {
+                        this.alert.set(`Error while parsing formula: ${this.current_sheet.formula_error}`, "warning")
+                    }
                 } catch (e1) {
-                    let content = e1
-                    try {
-                        content = e1.response.data.detail
-                    } catch(e2) {}
-                    if (!content)
-                        content = e1
-                    this.alert.set(`Error opening sheet ${sheet.id}: ${content}`, "danger")
+                    this.alert.logError(`Error while opening sheet ${sheet.id}`, e1)
                 }
             },
+
+            async loadFormulas() {
+                try {
+                    const formulas = await axios.get("/conduit/formulas")
+                    editor.setText(formulas.data)
+                    this.unsaved_changes = false
+                    wss.send("__formulas")
+                } catch(e) {
+                    this.alert.logError("Unable to load formulas", e)
+                }
+            },
+
+            async saveText(text) {
+                if (!this.unsaved_changes)
+                    return
+
+                try {
+                    await axios.post("/conduit/formulas", {
+                        file_content: text
+                    })
+                    this.alert.clear()
+                    this.unsaved_changes = false
+                } catch(e1) {
+                    this.alert.logError("Error while saving formulas", e1)
+                }
+            },
+        },
+        created() {
+            window.onbeforeunload = () => this.have_unsaved_commits ? true : null
         }
     }
 
@@ -187,5 +262,12 @@
     vue.config.compilerOptions.delimiters = ["[[", "]]"]
     const vue_mount = vue.mount("#cdt-editor-app")
     wss = new WebsocketBind(vue_mount, "/sheets/editor")
+    editor = new EditorBind(vue_mount, "ace-editor-formulas", "ace/mode/python")
+    editor.teleport("ace-editor-teleport")
+
+    const modal = document.getElementById("modal-formula-editor")
+    modal.addEventListener("hidden.bs.modal", () => {
+        wss.send("__formulas_exit")
+    })
     </script>
 {% endblock %}

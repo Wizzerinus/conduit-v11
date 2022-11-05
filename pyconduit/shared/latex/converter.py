@@ -86,6 +86,7 @@ BuiltinCommands = {
     "hspace*": TextCommand("", 1),
     "noindent": TextCommand("", 0),
     "newpage": TextCommand("", 0),
+    "qquad": TextCommand("    ", 0),
 }
 # TODO: wrapfigure
 

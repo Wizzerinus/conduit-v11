@@ -78,10 +78,10 @@ async def change_password(user: User = Depends(require_login), password: ChangeP
 
     new_password, salt = default_hash(password.new_password)
     with datastore.operation():
-        accounts = datastore.get("accounts", {})
+        accounts = datastore.accounts
         user_acc = accounts.get(user.login, {})
-        user_acc["password"] = new_password
-        user_acc["salt"] = salt
+        user_acc.password = new_password
+        user_acc.salt = salt
     return {"message": locale["pages"]["index"]["password_changed"]}
 
 
@@ -95,16 +95,16 @@ async def conduit_settings(user: User = Depends(require_login), settings: Condui
         raise HTTPException(status_code=401, detail=locale["exceptions"]["invalid_credentials"])
 
     with datastore.operation():
-        accounts = datastore.get("accounts", {})
+        accounts = datastore.accounts
         user_acc = accounts.get(user.login, {})
-        user_acc["allow_conduit_view"] = settings.allow_conduit_view
+        user_acc.allow_conduit_view = settings.allow_conduit_view
     return {"message": locale["pages"]["index"]["conduit_settings_changed"]}
 
 
 @login_app.post("/register", dependencies=[Depends(require_admin)])
 async def register(user: RegisterUser):
     with datastore.operation():
-        accounts = datastore.get("accounts", {})
+        accounts = datastore.accounts
         if user.login in accounts:
             raise HTTPException(status_code=400, detail=locale["exceptions"]["account_already_exists"])
 

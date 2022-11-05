@@ -7,6 +7,7 @@ titles:
   edit_user_modal: Редактирование пользователя
   bulk_create_users_modal: Создание пользователей
   change_settings_modal: Изменение настроек
+  formula_editor_modal: Редактор формул
 navbar:
   index: Главная
   sheet_editor: Редактор листков
@@ -107,4 +108,5 @@ pages:
     editor: "Оценку выставил "
     set_for: Выставляю за
     successfully_saved: Кондуит сохранён!
-    error_while_saving: "Произошла ошибка при сохранении кондуита: "
+    error_while_saving: Произошла ошибка при сохранении кондуита
+    formulas: Формулы

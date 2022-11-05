@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
+from pyconduit.models.user import UserSensitive
+
 """
 Conduit generation strategies:
 Note that if the conduit has to be rebuilt and the author cannot edit them, a warning is emitted.
@@ -25,3 +27,13 @@ class Conduit(BaseModel):
     content: dict[str, list[str]]
     problem_names: list[str]
     problem_text_cache: list[str]
+
+
+class ConduitContent(BaseModel):
+    id: str
+    conduit: Conduit
+    users: list[UserSensitive]
+    name: str
+    formula_error: str = ""
+    styles: dict[str, dict[str, str]] = {}
+    real_indices: list[int] = []  # old index for problems, -1 for virtual columns like "sum"

@@ -3,6 +3,11 @@
     width: 100%;
 }
 
+#ace-editor-formulas {
+    height: calc(100vh - 300px);
+    width: 100%;
+}
+
 #katex-viewer {
     height: calc(100vh - 112px);
 }
@@ -66,10 +71,6 @@
 
 .table-conduit td {
     border: 1px solid black;
-}
-
-.conduit-filled-cell {
-    background-color: gainsboro !important;
 }
 
 .conduit-unsaved-cell {

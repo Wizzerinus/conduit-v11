@@ -107,7 +107,7 @@
                     })
                     this.alert.set(response.data.message, "success")
                 } catch(e) {
-                    this.alert.set(e.response.data.detail, "danger")
+                    this.alert.logError("Error while updating conduit settings", e)
                 }
             },
             async changePassword() {
@@ -119,7 +119,7 @@
                     })
                     this.alert.set(response.data.message, "success")
                 } catch(e) {
-                    this.alert.set(e.response.data.detail, "danger")
+                    this.alert.logError("Error while changing password", e)
                 }
             }
         }

@@ -33,7 +33,7 @@ async def admin_page(request: Request, user: User = Depends(get_current_user)):
 
 @admin_app.get("/users")
 async def get_users():
-    all_users = accounts["accounts"] if "accounts" in accounts else {}
+    all_users = accounts.accounts
     user_list = [UserSensitive.parse_obj(user) for user in all_users.values()]
     admins, teachers, students, misc = partition(user_list, 3, get_key)
     users = [
@@ -48,7 +48,7 @@ async def get_users():
 @admin_app.post("/update-user")
 async def update_privileges(user_data: UserSensitive = Body(...)):
     with accounts.operation():
-        all_users = accounts.get("accounts", {})
+        all_users = accounts.accounts
         old_data = dict(all_users.get(user_data.login, {}))
         old_data.update(user_data.dict())
         all_users[user_data.login] = old_data
@@ -57,23 +57,21 @@ async def update_privileges(user_data: UserSensitive = Body(...)):
 
 @admin_app.post("/reset-password/{login}")
 async def reset_password(login: str):
-    if "accounts" not in accounts or login not in accounts["accounts"]:
+    if login not in accounts.accounts:
         raise HTTPException(status_code=404, detail="User not found")
 
     new_password = os.urandom(10).hex()
     password, salt = default_hash(new_password)
     with accounts.operation():
-        accounts["accounts"][login]["password"] = password
-        accounts["accounts"][login]["salt"] = salt
+        accounts.accounts[login].password = password
+        accounts.accounts[login].salt = salt
     return {"success": True, "password": new_password}
 
 
 @admin_app.post("/create-users", response_class=PlainTextResponse)
 def create_users(users: BulkRegister = Body(...)):
     # using sync here to ensure scrypt stuff is done in a separate thread as scrypt is slow
-    with accounts.operation():
-        account_dict = accounts.get("accounts", {})
-
+    account_dict = accounts.accounts
     usernames = users.users.split("\n")
     if not users.teachers:
         privilege_doc = Privileges()

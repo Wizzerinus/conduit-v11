@@ -32,7 +32,11 @@ class WebsocketBind {
         }
 
         const data = JSON.parse(event.data)
-        this.app[`ws_on${data.action}`](data)
+        try {
+            this.app[`ws_on${data.action}`](data)
+        } catch (e) {
+            this.app.alert.logError(`Socket action ${data.action} failed`, e)
+        }
     }
 
     clearIfConnected() {

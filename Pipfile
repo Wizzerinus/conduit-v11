@@ -13,6 +13,8 @@ itsdangerous = "*"
 texsoup = "*"
 markdown-it-py = "*"
 mdit-py-plugins = "*"
+asteval = "*"
+coloraide = "*"
 
 [dev-packages]
 black = "*"

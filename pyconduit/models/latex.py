@@ -77,9 +77,9 @@ class LatexInclude(LatexObject):
         if not allow_recursion:
             raise ValueError(f"Multi-layer recursion detected @ {self.path}")
 
-        if self.path not in datastore:
+        if self.path not in datastore.sheets:
             raise ValueError(f"Invalid include path: {self.path}")
-        doc = LatexDocument.parse_obj(datastore[self.path])
+        doc = LatexDocument.parse_obj(datastore.sheets[self.path])
         return doc.generate_markdown(allow_recursion=False)
 
 

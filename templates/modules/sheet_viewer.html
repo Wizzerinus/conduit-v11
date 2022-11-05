@@ -69,13 +69,7 @@
                         this.sheet_names[sheet.id] = sheet.name
                     }
                 } catch (e1) {
-                    let content = e1
-                    try {
-                        content = e1.response.data.detail
-                    } catch(e2) {}
-                    if (!content)
-                        content = e1
-                    this.alert.set(`Error loading sheet list: ${content}`, "danger")
+                    this.alert.logError(`Error while loading sheet list`, e1)
                 }
 
                 const init_sheet = "{{ sheet.replace('"', '\\"') }}"

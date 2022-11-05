@@ -73,6 +73,8 @@ class AtomicList:
 
 
 class AtomicDict:
+    ExistingAttrs = {"path", "_data", "parent", "updates", "ExistingAttrs"}
+
     def __init__(self, parent=None, data=None, path=""):
         self.path = path
         self._data = data or {}
@@ -89,6 +91,18 @@ class AtomicDict:
     def __setitem__(self, key, value):
         self._data[key] = atomize(self.parent, value, f"{self.path}{key}.")
         self.updates[f"{self.path}{key}"] = deatomize(value)
+
+    def __getattr__(self, key):
+        if key not in self.ExistingAttrs:
+            return self[key]
+        else:
+            return super().__getattribute__(key)
+
+    def __setattr__(self, key, value):
+        if key not in self.ExistingAttrs:
+            self[key] = value
+        else:
+            super().__setattr__(key, value)
 
     def __delitem__(self, key):
         del self._data[key]
@@ -137,6 +151,7 @@ class AtomicDict:
 
 class DatastoreHandle(abc.ABC):
     logger = logging.getLogger("PyConduit.Datastore")
+    ExistingAttrs = {"category", "data", "shared", "ExistingAttrs"}
 
     def __init__(self, category: str, shared: bool = False):
         self.category = category
@@ -149,6 +164,18 @@ class DatastoreHandle(abc.ABC):
 
     def __getitem__(self, key):
         return self.data[key]
+
+    def __getattr__(self, key):
+        if key not in self.ExistingAttrs:
+            return self[key]
+        else:
+            return super().__getattribute__(key)
+
+    def __setattr__(self, key, value):
+        if key not in self.ExistingAttrs:
+            self[key] = value
+        else:
+            super().__setattr__(key, value)
 
     def __contains__(self, item):
         return item in self.data
@@ -230,7 +257,7 @@ class DatastoreHandle(abc.ABC):
 
     @contextlib.contextmanager
     def operation(self):
-        yield
+        yield self
         self.save()
 
     @abc.abstractmethod
@@ -254,6 +281,7 @@ class DatastoreHandle(abc.ABC):
 
 class DatastoreJSON(DatastoreHandle):
     baseDataFolder = cfg["datastore"]["data-folder"]
+    ExistingAttrs = DatastoreHandle.ExistingAttrs | {"filename", "baseDataFolder"}
 
     def __init__(self, category: str, sharedLock: bool = None):
         self.filename = f"{self.baseDataFolder}/{category}.json"

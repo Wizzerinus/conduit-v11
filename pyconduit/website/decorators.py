@@ -31,8 +31,7 @@ locale = get_config("localization")
 
 
 def find_user(username: str) -> None | User:
-    with user_datastore.operation():
-        user_dict = user_datastore.get("accounts", {})
+    user_dict = user_datastore.accounts
     if username not in user_dict:
         return None
 
