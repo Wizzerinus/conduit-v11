@@ -2,11 +2,12 @@ import abc
 import re
 
 from TexSoup import TexNode, TexSoup
-from TexSoup.data import TexCmd, TexGroup, TexText
+from TexSoup.data import TexCmd, TexText
 
 from pyconduit.shared.helpers import get_config
 
 cfg = get_config("latex")
+locale = get_config("localization")
 first_problem_character = cfg["iterators"]["first-letter"]
 problem_skips = cfg["iterators"]["letter-skips"]
 problem_skip_indices = [ord(c) - ord(first_problem_character) for c in problem_skips]
@@ -98,9 +99,7 @@ class TextCommand(LatexCommand):
             or len(args) < self.num_args - 1
             or (len(args) == self.num_args - 1 and self.optional_arg is None)
         ):
-            raise ValueError(
-                f"Invalid number of arguments for command {node.name}: expected {self.num_args}, got {len(args)}."
-            )
+            raise ValueError(locale["latex"]["invalid-args"] % dict(expected=self.num_args, actual=len(args)), name=node.name)
 
         if len(args) == self.num_args:
             args = list(args)
@@ -129,7 +128,7 @@ class ItemExtractor(LatexCommand):
             if isinstance(child, TexNode) and child.name == "item":
                 ans.append(str(child)[6:])
             elif len(ans) == 0:
-                raise ValueError(f"ItemExtracted nodes should begin with an \\item command, got {child} instead.")
+                raise ValueError(locale["exceptions"]["itemextract_error"] % dict(name=child))
             else:
                 ans[-1] += str(child)
         node.expr.contents = []
@@ -149,7 +148,7 @@ class TextEnv(TextCommand):
 
     def apply(self, context: dict, node: TexNode, *args: str):
         if len(args) != 0:
-            raise ValueError(f"Invalid number of arguments for environment {node.name}: expected 0, got {len(args)}.")
+            raise ValueError(locale["exceptions"]["invalid_env_argcount"] % dict(name=node.name, actual=len(args)))
 
         return (
             MetadataNode(self.metaname),
@@ -166,7 +165,7 @@ class ErrorCommand(LatexCommand):
         self.replace_name = repl_name
 
     def apply(self, context: dict, node: TexNode, *args: str):
-        raise ValueError(f"Invalid command \\{node.name}. Use \\{self.replace_name} instead.")
+        raise ValueError(locale["exceptions"]["command_banned"] % dict(name=node.name, instead=self.replace_name))
 
 
 class GlobalConfig(LatexCommand):
@@ -248,7 +247,7 @@ def soup_to_command(cmd: TexNode) -> LatexCommand:
     brace_args = [arg for arg in cmd.args if arg.name == "BraceGroup"]
     bracket_args = [arg for arg in cmd.args if arg.name == "BracketGroup"]
     if len(brace_args) != 2 or len(bracket_args) > 2:
-        raise ValueError(f"Malformed \\newcommand: {cmd}")
+        raise ValueError(locale["exceptions"]["malformed_newcommand"] % dict(actual=cmd.name))
 
     num_args = 0 if len(bracket_args) == 0 else int(bracket_args[0].contents[0])
     optional_arg = None if len(bracket_args) <= 1 else bracket_args[1].contents[0]
@@ -284,12 +283,12 @@ def convert_latex(context_commands: dict[str, LatexCommand], latext: str) -> tup
                 last_stage = priority
                 soup_len = len(str(soup))
                 if soup_len > char_limit:
-                    raise ValueError(f"File size limit exceeded (max size {char_limit}, got size {soup_len}).")
+                    raise ValueError(locale["exceptions"]["latex_big"] % dict(limit=char_limit, size=soup_len))
             if last_stage == priority:
                 break
         if last_stage == priority_cap:
             break
     else:
-        raise ValueError(f"Command nesting limit of {nesting_limit} exceeded.")
+        raise ValueError(locale["exceptions"]["nesting_limit"] % dict(limit=nesting_limit))
 
     return soup, context

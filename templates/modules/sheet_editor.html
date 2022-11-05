@@ -17,10 +17,10 @@
                     </button>
                 </span>
                 <button type="button" class="list-group-item list-group-item-action list-group-item-primary" @click="newSheet">
-                    {{ locale.forms.btn_add_sheet }}
+                    {{ locale.pages.sheet_editor.btn_add_sheet }}
                 </button>
                 <button type="button" class="list-group-item list-group-item-action list-group-item-danger" @click="deleteSheet">
-                    {{ locale.forms.btn_remove_sheet }}
+                    {{ locale.pages.sheet_editor.btn_remove_sheet }}
                 </button>
             </div>
             <div class="col-9">
@@ -88,7 +88,7 @@
                     const username = this.other_users_sheets[sheet.id]
                     if (username === undefined)
                         return ""
-                    return `{{ locale.sheet_editor.sheet_in_use }} ${username}`
+                    return `{{ locale.common.sheet_in_use }} ${username}`
                 },
                 getColor(sheet, index) {
                     if (sheet.id === this.current_sheet)
@@ -102,7 +102,7 @@
                 },
                 newSheet() {
                     if (this.unsaved_changes && this.last_sheet !== this.current_sheet) {
-                        this.alert.set("{{ locale.sheet_editor.unsaved_changes }}", "warning")
+                        this.alert.set("{{ locale.common.unsaved_changes }}", "warning")
                         this.last_sheet = this.current_sheet
                         return
                     }
@@ -120,12 +120,12 @@
                         return
 
                     if (this.last_sheet !== this.current_sheet) {
-                        this.alert.set("{{ locale.sheet_editor.delete_dangerous }}", "warning")
+                        this.alert.set("{{ locale.pages.sheet_editor.delete_dangerous }}", "warning")
                         this.last_sheet = this.current_sheet
                         return
                     }
 
-                    const attempted_id = prompt("{{ locale.sheet_editor.delete_sheet }}")
+                    const attempted_id = prompt("{{ locale.pages.sheet_editor.delete_sheet }}")
                     this.last_sheet = ""
                     this.alert.clear()
                     if (attempted_id !== this.current_sheet)
@@ -140,7 +140,7 @@
 
                 async openSheet(sheet) {
                     if (this.unsaved_changes && this.last_sheet !== this.current_sheet) {
-                        this.alert.show("{{ locale.sheet_editor.unsaved_changes }}", "warning")
+                        this.alert.show("{{ locale.common.unsaved_changes }}", "warning")
                         this.last_sheet = this.current_sheet
                         return
                     }
@@ -180,7 +180,7 @@
                             file_content: text, expected_sheet: this.current_sheet || "", force_regen
                         })
                         if (response.data.warning) {
-                            this.alert.set(`{{ locale.sheet_editor.warning_found }}${response.data.warning}`, "warning")
+                            this.alert.set(`{{ locale.pages.sheet_editor.warning_found }}${response.data.warning}`, "warning")
                         } else {
                             this.alert.clear()
                         }

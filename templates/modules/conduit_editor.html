@@ -33,11 +33,11 @@
         </div>
         <div class="btn-toolbar position-absolute bottom-0 start-0 mb-4 ms-4">
             <div class="input-group me-2">
-                <input type="text" class="form-control" placeholder="{{ locale.conduit.set_for }}" v-model="teacher_setting">
+                <input type="text" class="form-control" placeholder="{{ locale.pages.conduit.set_for }}" v-model="teacher_setting">
             </div>
 
             <div class="btn-group me-2">
-                <button class="btn btn-outline-primary" @click="saveConduit">{{ locale.forms.btn_save }}</button>
+                <button class="btn btn-outline-primary" @click="saveConduit">{{ locale.common.btn_save }}</button>
                 <button v-for="(sheet, index) in sheet_list" :title="getTitle(sheet)" type="button" class="btn"
                         :disabled="isDisabled(sheet)" :class="getColor(sheet, index)" @click="openSheet(sheet)">
                     [[ sheet.name ]]
@@ -99,7 +99,7 @@
                 const username = this.other_users_sheets[sheet.id]
                 if (username === undefined)
                     return ""
-                return `{{ locale.sheet_editor.sheet_in_use }} ${username}`
+                return `{{ locale.common.sheet_in_use }} ${username}`
             },
             getColor(sheet, index) {
                 if (this.current_sheet && sheet.id === this.current_sheet.id)
@@ -119,10 +119,10 @@
                 const parts = val.split(";")
                 if (parts.length <= 1)
                     return ""
-                let value = `{{ locale.conduit.submit_date }}${parts[1]}\n` +
-                            `{{ locale.conduit.teacher }}${parts[2]}`
+                let value = `{{ locale.pages.conduit.submit_date }}${parts[1]}\n` +
+                            `{{ locale.pages.conduit.teacher }}${parts[2]}`
                 if (parts[3] && parts[3] !== parts[2])
-                    value += `\n{{ locale.conduit.editor }}${parts[3]}`
+                    value += `\n{{ locale.pages.conduit.editor }}${parts[3]}`
                 return value
             },
             fillCell(user, index) {
@@ -142,7 +142,7 @@
                     for (const user of this.current_sheet.users) {
                         this.unsaved_changes[user.login] = {}
                     }
-                    this.alert.set("Successfully saved conduit!", "success")
+                    this.alert.set("{{ locale.pages.conduit.successfully_saved }}", "success")
                 } catch(e1) {
                     let content = e1
                     try {
@@ -150,12 +150,12 @@
                     } catch(e2) {}
                     if (!content)
                         content = e1
-                    this.alert.set(`Error while saving: ${content}`, "danger")
+                    this.alert.set(`{{ locale.pages.conduit.error_while_saving }}${content}`, "danger")
                 }
             },
             async openSheet(sheet) {
                 if (this.unsaved_changes.length > 0 && this.last_sheet !== this.current_sheet.id) {
-                    this.alert.show("{{ locale.sheet_editor.unsaved_changes }}", "warning")
+                    this.alert.show("{{ locale.common.unsaved_changes }}", "warning")
                     this.last_sheet = this.current_sheet.id
                     return
                 }

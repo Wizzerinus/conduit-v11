@@ -101,7 +101,7 @@ def collect_excess(doc: LatexDocument, current_metadata: MetadataNode) -> None:
         else:
             break
     else:
-        raise ValueError("Excess stacking limit reached")
+        raise ValueError(locale["exceptions"]["stacking_limit"])
 
 
 def build_latex(latext: str) -> LatexDocument:
@@ -138,7 +138,7 @@ def build_latex(latext: str) -> LatexDocument:
         elif isinstance(node, TexNode) and node.contents == [""]:
             pass
         else:
-            raise ValueError(f"Unknown node: {node} ({type(node)})")
+            raise ValueError(locale["exceptions"]["unknown_node"] % dict(node=node, type=type(node)))
 
     collect_excess(doc, current_metadata)
     return doc

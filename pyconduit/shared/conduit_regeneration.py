@@ -1,6 +1,9 @@
 from pyconduit.models.bundle import BundleDocument
 from pyconduit.models.conduit import Conduit
 from pyconduit.models.latex import LatexProblem, LatexRequest
+from pyconduit.shared.helpers import get_config
+
+locale = get_config("localization")
 
 
 def make_conduit(problems: list[LatexProblem], content: dict[str, list[str]]) -> Conduit:
@@ -25,10 +28,7 @@ def regen_once(bundle: BundleDocument, ctx: LatexRequest) -> tuple[bool, str]:
 
 def regen_force(bundle: BundleDocument, ctx: LatexRequest) -> tuple[bool, str]:
     if bundle.conduit is not None and not ctx.force_regen:
-        raise ValueError(
-            "Conduit regeneration is forced, but force_regen is not set. "
-            "Please insert '__FORCE_REGEN__' into the document."
-        )
+        raise ValueError(locale["exceptions"]["need_force_regen"])
 
     problems = [prob for prob in bundle.latex.objects if isinstance(prob, LatexProblem)]
     bundle.conduit = make_conduit(problems, {})
@@ -54,7 +54,9 @@ def regen_cache_mid(bundle: BundleDocument, ctx: LatexRequest) -> tuple[bool, st
 
     cache_misses = [text for text, hits in cache_hits.items() if hits == 0]
     if cache_misses:
-        return False, "The following problems from cache are missing: " + ", ".join(cache_misses)
+        return False, (
+            locale["pages"]["sheet_editor"]["missing_cache_strategy"] % ", ".join(f"'{x}'" for x in cache_misses)
+        )
 
     # the item on index (i) is the new index of the problem, thats text is at index (i) in the cache
     indices_converted = []

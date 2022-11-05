@@ -3,18 +3,18 @@
 {% block main %}
 <h2>{{ locale.title }}</h2>
 
-{{ locale.messages.login_for_full_access }}
+{{ locale.common.login_for_full_access }}
 
 <form action="/login/auth" method="post">
     <div class="row">
         <div class="col-auto">
-            <input class="form-control" type="text" name="username" placeholder="{{ locale.forms.username }}" />
+            <input class="form-control" type="text" name="username" placeholder="{{ locale.common.username }}" />
         </div>
         <div class="col-auto">
-            <input class="form-control" type="password" name="password" placeholder="{{ locale.forms.password }}" />
+            <input class="form-control" type="password" name="password" placeholder="{{ locale.common.password }}" />
         </div>
         <div class="col-auto">
-            <input class="btn btn-primary" type="submit" value="{{ locale.forms.btn_login }}">
+            <input class="btn btn-primary" type="submit" value="{{ locale.common.btn_login }}">
         </div>
     </div>
 </form>

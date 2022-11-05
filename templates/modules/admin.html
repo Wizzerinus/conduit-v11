@@ -7,7 +7,7 @@
         {% include "parts/vue-alert.html" %}
 
         <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#bulk-create-users-modal">
-            {{ locale.forms.btn_bulk_create_users }}
+            {{ locale.pages.admin.btn_bulk_create_users }}
         </button>
 
         <template v-for="category in all_categories">
@@ -21,7 +21,7 @@
                         </div>
                         <div class="card-body">
                             <div class="card-text">
-                                <span v-html="locale.messages.user_login.replace('%s', user.login)"></span>
+                                <span v-html="locale.pages.admin.user_login.replace('%s', user.login)"></span>
                                 <ul>
                                     <template v-for="(is_given, scope) in user.privileges">
                                         <li v-if="is_given && locale.scopes[scope]">
@@ -32,7 +32,7 @@
                             </div>
                             <button type="button" data-bs-toggle="modal" data-bs-target="#edit-user-modal"
                                     class="btn btn-primary" @click="editUser(user.login)">
-                                {{ locale.forms.btn_edit_user }}
+                                {{ locale.pages.admin.btn_edit_user }}
                             </button>
                         </div>
                     </div>
@@ -49,17 +49,17 @@
                     </div>
                     <div class="modal-body">
                         <label class="form-label" for="bulk-create-textarea">
-                            {{ locale.messages.bulk_create_howto }}
+                            {{ locale.pages.admin.bulk_create_howto }}
                         </label>
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="bulk-teachers" v-model="bulk_teachers" />
-                            <label class="form-check-label" for="bulk-teachers">{{ locale.forms.switch_teachers }}</label>
+                            <label class="form-check-label" for="bulk-teachers">{{ locale.pages.admin.switch_teachers }}</label>
                         </div>
                         <textarea v-model="bulk_create_list" class="form-control mt-2" rows="7" id="bulk-create-textarea"></textarea>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ locale.forms.btn_close }}</button>
-                        <button type="button" class="btn btn-primary" @click="bulkCreate">{{ locale.forms.btn_save }}</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ locale.common.btn_close }}</button>
+                        <button type="button" class="btn btn-primary" @click="bulkCreate">{{ locale.common.btn_save }}</button>
                     </div>
                 </div>
             </div>
@@ -74,7 +74,7 @@
                     </div>
                     <div class="modal-body">
                         <div class="row">
-                            <div class="col-4">{{ locale.forms.admin_edit_login }}</div>
+                            <div class="col-4">{{ locale.pages.admin.edit_login }}</div>
                             <div class="col">
                                 [[ user.name ]] (<code>[[ user.login ]]</code>)
                             </div>
@@ -82,7 +82,7 @@
                         <div class="row">
                             <div class="col-4">
                                 <label class="form-label" for="admin_username">
-                                    {{ locale.forms.admin_edit_username }}
+                                    {{ locale.pages.admin.edit_username }}
                                 </label>
                             </div>
                             <div class="col">
@@ -90,7 +90,7 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-4">{{ locale.forms.admin_edit_privileges }}</div>
+                            <div class="col-4">{{ locale.pages.admin.edit_privileges }}</div>
                             <div class="col">
                                 {% for scope in webcfg.all_scopes %}
                                 <div class="form-check">
@@ -106,14 +106,14 @@
                         <div class="row mt-2">
                             <div class="col">
                                 <button type="button" @click="resetPassword" class="btn btn-warning">
-                                    {{ locale.forms.btn_reset_password }}
+                                    {{ locale.pages.admin.btn_reset_password }}
                                 </button>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ locale.forms.btn_close }}</button>
-                        <button type="button" class="btn btn-primary" @click="saveUser">{{ locale.forms.btn_save }}</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ locale.common.btn_close }}</button>
+                        <button type="button" class="btn btn-primary" @click="saveUser">{{ locale.common.btn_save }}</button>
                     </div>
                 </div>
             </div>
@@ -143,7 +143,7 @@
                     await axios.post("/admin/update-user", this.user)
                     location.reload()
                 } catch(e) {
-                    this.alert.set(`Error while updating privileges: ${e}`, "danger")
+                    this.alert.set(`{{ locale.pages.admin.error_updating_privileges }}${e}`, "danger")
                 }
             },
             markDirty() {
@@ -152,9 +152,9 @@
             async resetPassword() {
                 try {
                     const response = await axios.post(`/admin/reset-password/${this.user.login}`)
-                    this.alert.set(`New password: <code>${response.data.password}</code>`, "info", true)
+                    this.alert.set(`{{ locale.pages.admin.new_password }}<code>${response.data.password}</code>`, "info", true)
                 } catch(e) {
-                    this.alert.set(`Error while resetting password: ${e}`, "danger")
+                    this.alert.set(`{{ locale.pages.admin.error_resetting_password }}${e}`, "danger")
                 }
             },
             async bulkCreate() {
@@ -165,7 +165,7 @@
                     })
                     this.bulk_create_list = response.data
                 } catch(e) {
-                    this.alert.set(`Error while bulk creating users: ${e}`, "danger")
+                    this.alert.set(`{{ locale.pages.admin.error_bulk_creating }}${e}`, "danger")
                     this.allow_bulk_create = true
                 }
             },
