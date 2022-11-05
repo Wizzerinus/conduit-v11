@@ -1,3 +1,5 @@
 .idea
 config/secrets.yml
 json-db
+PIDlock
+PIDlock2
