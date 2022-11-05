@@ -7,6 +7,7 @@ class Privileges(BaseModel):
     conduit_generation: bool = True
     conduit_edit: bool = False
     sheets_edit: bool = False
+    formula_edit: bool = False
 
     def has_scope(self, scope: str) -> bool:
         return getattr(self, scope, False)

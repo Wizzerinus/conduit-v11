@@ -27,4 +27,5 @@ all_scopes:
   - conduit_generation
   - conduit_edit
   - sheets_edit
+  - formula_edit
   - admin

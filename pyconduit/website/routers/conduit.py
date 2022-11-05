@@ -94,12 +94,12 @@ def get_file(file_id: str) -> ConduitContent:
     return conduit_document
 
 
-@conduit_app.get("/formulas", dependencies=[Depends(RequireScope("conduit_edit"))])
+@conduit_app.get("/formulas", dependencies=[Depends(RequireScope("formula_edit"))])
 async def get_conduit_formulas() -> str:
     return datastore.formulas
 
 
-@conduit_app.post("/formulas", dependencies=[Depends(RequireScope("conduit_edit"))])
+@conduit_app.post("/formulas", dependencies=[Depends(RequireScope("formula_edit"))])
 async def set_conduit_formulas(file_content: str = Body(..., embed=True)):
     with datastore.operation():
         datastore.formulas = file_content

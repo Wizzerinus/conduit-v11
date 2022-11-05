@@ -38,10 +38,12 @@
 
             <div class="btn-group me-2">
                 <button class="btn btn-success" @click="saveConduit">{{ locale.common.btn_save }}</button>
+                {% if user.privileges.formula_edit %}
                 <button class="btn btn-secondary" @click="loadFormulas" data-bs-toggle="modal"
                         data-bs-target="#modal-formula-editor" :disabled="isDisabled('__formulas')">
                     {{ locale.pages.conduit.formulas }}
                 </button>
+                {% endif %}
                 <button v-for="(sheet, index) in sheet_list" :title="getTitle(sheet)" type="button" class="btn"
                         :disabled="isDisabled(sheet)" :class="getColor(sheet, index)" @click="openSheet(sheet)">
                     [[ sheet.name ]]
@@ -49,6 +51,7 @@
             </div>
         </div>
 
+        {% if user.privileges.formula_edit %}
         <div id="modal-formula-editor" class="modal fade" tabindex="-1">
             <div class="modal-dialog modal-xl">
                 <div class="modal-content">
@@ -63,13 +66,16 @@
                 </div>
             </div>
         </div>
+        {% endif %}
     </div>
+    {% if user.privileges.formula_edit %}
     <div id="ace-editor-formulas"></div>
 
-    <script src="/static/wssbind.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.12.5/ace.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.12.5/mode-python.min.js"></script>
     <script src="/static/editorbind.js"></script>
+    {% endif %}
+    <script src="/static/wssbind.js"></script>
 
     <script>
     const username = '{{ user.name.replace("'", "\\'") }}'
@@ -227,6 +233,7 @@
                 }
             },
 
+            {% if user.privileges.formula_edit %}
             async loadFormulas() {
                 try {
                     const formulas = await axios.get("/conduit/formulas")
@@ -252,6 +259,7 @@
                     this.alert.logError("Error while saving formulas", e1)
                 }
             },
+            {% endif %}
         },
         created() {
             window.onbeforeunload = () => this.have_unsaved_commits ? true : null
@@ -262,6 +270,7 @@
     vue.config.compilerOptions.delimiters = ["[[", "]]"]
     const vue_mount = vue.mount("#cdt-editor-app")
     wss = new WebsocketBind(vue_mount, "/sheets/editor")
+    {% if user.privileges.formula_edit %}
     editor = new EditorBind(vue_mount, "ace-editor-formulas", "ace/mode/python")
     editor.teleport("ace-editor-teleport")
 
@@ -269,5 +278,6 @@
     modal.addEventListener("hidden.bs.modal", () => {
         wss.send("__formulas_exit")
     })
+    {% endif %}
     </script>
 {% endblock %}

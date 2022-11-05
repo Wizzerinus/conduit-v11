@@ -101,8 +101,7 @@ async def conduit_settings(user: User = Depends(require_login), settings: Condui
     return {"message": locale["pages"]["index"]["conduit_settings_changed"]}
 
 
-@login_app.post("/register", dependencies=[Depends(require_admin)])
-async def register(user: RegisterUser):
+def register(user: RegisterUser):
     with datastore.operation():
         accounts = datastore.accounts
         if user.login in accounts:

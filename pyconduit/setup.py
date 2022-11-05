@@ -1,19 +1,9 @@
-import asyncio
 import secrets
 import subprocess
 import sys
-from functools import wraps
 
 import click
 import yaml
-
-
-def asynchronous(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        return asyncio.run(f(*args, **kwargs))
-
-    return wrapper
 
 
 @click.group()
@@ -37,7 +27,6 @@ def cleanup():
 
 
 @cli.command()
-@asynchronous
 async def create_admin():
     from pyconduit.models.user import Privileges, RegisterUser
     from pyconduit.shared.datastore import datastore_manager
@@ -51,7 +40,9 @@ async def create_admin():
             del accounts[username]
 
     password = input("Password: ")
-    privileges = Privileges(admin=True, conduit_edit=True, sheets_edit=True, conduit_generation=False)
+    privileges = Privileges(
+        admin=True, conduit_edit=True, sheets_edit=True, conduit_generation=False, formula_edit=True
+    )
     await register(RegisterUser(login=username, password=password, name="Administrator", privileges=privileges))
 
 
