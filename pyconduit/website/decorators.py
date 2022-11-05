@@ -10,7 +10,7 @@ from starlette.templating import Jinja2Templates
 from starlette.websockets import WebSocket
 
 from pyconduit.models.user import User
-from pyconduit.shared.datastore import datastore_manager
+from pyconduit.shared.datastore import datastore_manager, deatomize
 from pyconduit.shared.helpers import get_config
 
 templates = Jinja2Templates(directory="templates")
@@ -35,7 +35,7 @@ def find_user(username: str) -> None | User:
     if username not in user_dict:
         return None
 
-    user_obj = User.parse_obj(user_dict[username])
+    user_obj = User.parse_obj(deatomize(user_dict[username]))
     if not user_obj.privileges.login:
         raise HTTPException(status_code=401, detail=locale["exceptions"]["account_disabled"])
 
