@@ -31,6 +31,10 @@ def create_admin():
     from pyconduit.models.user import Privileges, RegisterUser
     from pyconduit.shared.datastore import datastore_manager
     from pyconduit.website.routers.login import register
+    from pyconduit.shared.init import init_databases
+
+    generate_salts.callback()
+    init_databases()
 
     datastore = datastore_manager.get("accounts")
     username = input("Username: ")
