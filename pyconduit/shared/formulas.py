@@ -175,7 +175,7 @@ def execute_formula(doc: ConduitContent, formula: str) -> tuple[dict, str]:
     fp = FormulaProvider(doc)
     stream = Interstream()
     aev = Interpreter(
-        usersyms={"provider": fp, "is_solved": fp.is_solved, "is_real": fp.is_real},
+        usersyms={"provider": fp, "is_solved": fp.is_solved, "is_real": fp.is_real, "sheet_id": doc.id},
         builtins_readonly=True,
         writer=stream,
         err_writer=stream,
