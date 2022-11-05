@@ -5,7 +5,7 @@ from starlette.requests import Request
 from starlette.responses import HTMLResponse, PlainTextResponse
 
 from pyconduit.models.user import BulkRegister, Privileges, User, UserSensitive
-from pyconduit.shared.datastore import datastore_manager
+from pyconduit.shared.datastore import datastore_manager, deatomize
 from pyconduit.shared.helpers import get_config, partition, transform_to_login
 from pyconduit.website.decorators import RequireScope, get_current_user, make_template_data, templates
 from pyconduit.website.routers.login import default_hash
@@ -34,7 +34,7 @@ async def admin_page(request: Request, user: User = Depends(get_current_user)):
 @admin_app.get("/users")
 async def get_users():
     all_users = accounts.accounts
-    user_list = [UserSensitive.parse_obj(user) for user in all_users.values()]
+    user_list = [UserSensitive.parse_obj(deatomize(user)) for user in all_users.values()]
     admins, teachers, students, misc = partition(user_list, 3, get_key)
     users = [
         {"name": locale["user_category"]["admin"], "users": admins},

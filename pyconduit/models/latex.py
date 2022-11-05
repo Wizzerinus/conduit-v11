@@ -2,7 +2,7 @@ import abc
 
 from pydantic import BaseModel
 
-from pyconduit.shared.datastore import datastore_manager
+from pyconduit.shared.datastore import datastore_manager, deatomize
 
 datastore = datastore_manager.get("sheets")
 
@@ -79,7 +79,7 @@ class LatexInclude(LatexObject):
 
         if self.path not in datastore.sheets:
             raise ValueError(f"Invalid include path: {self.path}")
-        doc = LatexDocument.parse_obj(datastore.sheets[self.path])
+        doc = LatexDocument.parse_obj(deatomize(datastore.sheets[self.path]))
         return doc.generate_markdown(allow_recursion=False)
 
 
