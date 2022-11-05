@@ -45,7 +45,7 @@
                 </button>
                 {% endif %}
                 <button v-for="(sheet, index) in sheet_list" :title="getTitle(sheet)" type="button" class="btn"
-                        :disabled="isDisabled(sheet)" :class="getColor(sheet, index)" @click="openSheet(sheet)">
+                        :disabled="isDisabled(sheet.id)" :class="getColor(sheet.id, index)" @click="openSheet(sheet)">
                     [[ sheet.name ]]
                 </button>
             </div>
@@ -89,59 +89,65 @@
                 unsaved_commits: {},
                 have_unsaved_commits: false,
                 unsaved_changes: false,
-                // these are used for the sheet edit websocket, to prevent editing latex at the same time with the conduit
                 other_users: {},
-                other_users_sheets: {},
                 teacher_setting: username,
+                handle: -1,
             }
         },
         methods: {
-            ws_onSetSheet(data) {
-                const user_id = data.cid
-                let current_sheet
-                if ((current_sheet = this.other_users[user_id]))
-                    delete this.other_users_sheets[current_sheet]
-                if (data.sheet) {
-                    this.other_users[user_id] = data.sheet
-                    this.other_users_sheets[data.sheet] = data.client
-                }
-            },
             ws_onInit(data) {
-                this.sheet_list = []
-                for (const item of data.files) {
-                    if (item.has_conduit) {
-                        this.sheet_list.push(item)
+                this.sheet_list = data.files
+                this.other_users = data.open_sheets
+                this.handle = data.handle
+            },
+            ws_onOpen(data) {
+                const {sheet_id, sheet} = data
+                this.other_users[sheet_id] = sheet
+            },
+            ws_onClose(data) {
+                const {id, sheet_id} = data
+                delete this.other_users[sheet_id].users[id]
+                    if (Object.keys(this.other_users[sheet_id].users).length === 0)
+                    delete this.other_users[sheet_id]
+            },
+            ws_onConduitUpdate(data) {
+                this.current_sheet.styles = data.styles
+                for (const username of Object.keys(data.changes)) {
+                    const problems = data.changes[username]
+                    for (const problem_index of Object.keys(problems)) {
+                        const index = this.unreal_indices[problem_index]
+                        this.current_sheet.conduit.content[username][index] = problems[problem_index]
                     }
                 }
-                for (const handle_id of Object.keys(data.open_sheets)) {
-                    if (handle_id === "__formulas") {
-                        this.other_users_sheets[handle_id] = 1
-                        continue
-                    }
-                    const {client, sheet} = data.open_sheets[handle_id]
-                    this.other_users[handle_id] = sheet
-                    this.other_users_sheets[sheet] = client
-                }
-            },
-            ws_onNewSheet(data) {},
-            ws_onDeleteSheet(data) {
-                this.sheet_list = this.sheet_list.filter(sheet => sheet.id !== data.id)
-            },
 
-            ws_onOpenFormulas() {this.other_users_sheets["__formulas"] = 1},
-            ws_onCloseFormulas() {delete this.other_users_sheets["__formulas"]},
+                for (const row of Object.keys(data.virtual_rows)) {
+                    this.current_sheet.conduit.content[row] = data.virtual_rows[row]
+                }
+
+                for (const user of Object.keys(data.real_rows)) {
+                    const row_obj = this.current_sheet.conduit.content[user]
+                    let j = 0
+                    for (let i = 0; i < row_obj.length; i++) {
+                        if (this.current_sheet.real_indices[i] < 0)
+                            row_obj[i] = data.real_rows[user][j++]
+                    }
+                }
+            },
 
             isDisabled(sheet) {
-                return this.other_users_sheets[sheet.id] !== undefined || this.other_users_sheets[sheet] !== undefined
+                return this.other_users[sheet] !== undefined && this.other_users[sheet].method === "sheet" &&
+                    !this.other_users[sheet].users[this.handle]
             },
             getTitle(sheet) {
-                const username = this.other_users_sheets[sheet.id]
-                if (username === undefined)
+                const userdata = this.other_users[sheet.id]
+                if (userdata === undefined)
                     return ""
-                return `{{ locale.common.sheet_in_use }} ${username}`
+
+                const username = Object.values(userdata.users).join("\m")
+                return `{{ locale.common.sheet_in_use }}\n${username}`
             },
             getColor(sheet, index) {
-                if (this.current_sheet && sheet.id === this.current_sheet.id)
+                if (this.current_sheet && sheet === this.current_sheet.id)
                     return "btn-outline-success"
 
                 if (this.isDisabled(sheet))
@@ -219,12 +225,18 @@
                 try {
                     const response = await axios.get(`/conduit/content/${sheet.id}`)
                     this.current_sheet = response.data
+                    this.unreal_indices = {}
+                    for (let i = 0; i < this.current_sheet.real_indices.length; i++) {
+                        const index = this.current_sheet.real_indices[i]
+                        if (index > -1)
+                            this.unreal_indices[index] = i
+                    }
                     this.unsaved_commits = {}
                     this.have_unsaved_commits = false
                     for (const user of this.current_sheet.users) {
                         this.unsaved_commits[user.login] = {}
                     }
-                    wss.send(sheet.id)
+                    wss.send({action: "Open", method: "conduit", id: sheet.id})
                     if (this.current_sheet.formula_error) {
                         this.alert.set(`Error while parsing formula: ${this.current_sheet.formula_error}`, "warning")
                     }
@@ -239,7 +251,7 @@
                     const formulas = await axios.get("/conduit/formulas")
                     editor.setText(formulas.data)
                     this.unsaved_changes = false
-                    wss.send("__formulas")
+                    wss.send({action: "Open", method: "sheet", id: "__formulas"})
                 } catch(e) {
                     this.alert.logError("Unable to load formulas", e)
                 }
@@ -276,7 +288,7 @@
 
     const modal = document.getElementById("modal-formula-editor")
     modal.addEventListener("hidden.bs.modal", () => {
-        wss.send("__formulas_exit")
+        wss.send({action: "Close", id: "__formulas"})
     })
     {% endif %}
     </script>

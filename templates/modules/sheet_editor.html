@@ -50,48 +50,39 @@
                     current_text: "",
                     current_sheet: "",
                     other_users: {},
-                    other_users_sheets: {},
                     last_sheet: "",
+                    handle: -1,
                 }
             },
 
             methods: {
-                ws_onSetSheet(data) {
-                    const user_id = data.cid
-                    let current_sheet
-                    if ((current_sheet = this.other_users[user_id]))
-                        delete this.other_users_sheets[current_sheet]
-                    if (data.sheet) {
-                        this.other_users[user_id] = data.sheet
-                        this.other_users_sheets[data.sheet] = data.client
-                    }
-                },
                 ws_onInit(data) {
                     this.sheet_list = data.files
-                    for (const handle_id of Object.keys(data.open_sheets)) {
-                        const {client, sheet} = data.open_sheets[handle_id]
-                        this.other_users[handle_id] = sheet
-                        this.other_users_sheets[sheet] = client
-                    }
+                    this.other_users = data.open_sheets
+                    this.handle = data.handle
                 },
-                ws_onNewSheet(data) {
-                    this.sheet_list.unshift(data)
+                ws_onOpen(data) {
+                    const {sheet_id, sheet} = data
+                    this.other_users[sheet_id] = sheet
                 },
-                ws_onDeleteSheet(data) {
-                    this.sheet_list = this.sheet_list.filter(sheet => sheet.id !== data.id)
+                ws_onClose(data) {
+                    const {id, sheet_id} = data
+                    delete this.other_users[sheet_id].users[id]
+                    if (Object.keys(this.other_users[sheet_id].users).length === 0)
+                        delete this.other_users[sheet_id]
                 },
-
-                ws_onOpenFormulas() {},
-                ws_onCloseFormulas() {},
+                ws_onConduitUpdate() {},
 
                 isDisabled(sheet) {
-                    return this.other_users_sheets[sheet.id] !== undefined
+                    return this.other_users[sheet.id] !== undefined && !this.other_users[sheet_id].users[this.handle]
                 },
                 getTitle(sheet) {
-                    const username = this.other_users_sheets[sheet.id]
-                    if (username === undefined)
+                    const userdata = this.other_users[sheet.id]
+                    if (userdata === undefined)
                         return ""
-                    return `{{ locale.common.sheet_in_use }} ${username}`
+
+                    const username = Object.values(userdata.users).join("\n")
+                    return `{{ locale.common.sheet_in_use }}\n${username}`
                 },
                 getColor(sheet, index) {
                     if (sheet.id === this.current_sheet)
@@ -138,7 +129,7 @@
                     this.current_sheet = ""
                     editor.setText("")
                     this.unsaved_changes = false
-                    wss.send("")
+                    wss.send({action: "Close", id: this.current_sheet})
                 },
 
                 async openSheet(sheet) {
@@ -155,7 +146,7 @@
                         editor.setText(response.data)
                         this.current_sheet = sheet.id
                         this.unsaved_changes = false
-                        wss.send(sheet.id)
+                        wss.send({action: "Open", method: "sheet", id: sheet.id})
                     } catch (e1) {
                         this.alert.logError(`Error while loading sheet ${sheet.id}`, e1)
                     }
@@ -183,7 +174,7 @@
                         }
                         this.unsaved_changes = false
                         this.current_sheet = response.data.sheet_id
-                        wss.send(this.current_sheet)
+                        wss.send({action: "Open", method: "sheet", id: this.current_sheet})
                     } catch(e1) {
                         this.alert.logError("Error while saving sheet", e1)
                     }

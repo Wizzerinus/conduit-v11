@@ -27,6 +27,7 @@ sheets_app = FastAPI()
 datastore = datastore_manager.get("sheets")
 socket_manager = SocketManager()
 socket_context = {}
+socket_current_sheet_per_user = {}
 locale = get_config("localization")
 logger = logging.getLogger("pyconduit.website.sheets")
 
@@ -138,6 +139,15 @@ async def delete_file(file_id: str):
 # Used to broadcast the currently edited file to prevent multiple users from editing the same file
 @sheets_app.websocket("/editor")
 async def editor_websocket(websocket: WebSocket):
+    """
+    Editor Websocket is used as a Mutex mechanism to prevent multiple people from editing the same file
+    at the same time. However, the conduits are atomized and ARE useful to have multiple people editing,
+    so here are the mechanics:
+    * A file can be edited in either file mode or conduit mode.
+    * Up to 1 editor in file mode, any number of editors in conduit mode.
+    * Someone can also edit a virtual file named '__formulas', only in file mode.
+    """
+
     try:
         user = await get_user_by_token(websocket.session["access_token"])
     except KeyError:
@@ -155,31 +165,43 @@ async def editor_websocket(websocket: WebSocket):
             for key, value in datastore.sheets.items()
         ]
 
-        await websocket.send_json({"action": "Init", "files": list(reversed(file_dict)), "open_sheets": socket_context})
+        await websocket.send_json(
+            {"action": "Init", "files": list(reversed(file_dict)), "open_sheets": socket_context, "handle": handle.id}
+        )
         while True:
-            sheet = await handle.receive_text()
-            if sheet == "__formulas":
-                socket_context["__formulas"] = handle.id
-                await socket_manager.broadcast({"action": "OpenFormulas"}, exclusions={websocket})
-                continue
-            if sheet == "__formulas_exit":
-                socket_context.pop("__formulas", None)
-                await socket_manager.broadcast({"action": "CloseFormulas"}, exclusions={websocket})
+            sheet = await handle.receive_json()
+            action, sheet_id = sheet.get("action"), sheet.get("id")
+            if sheet_id is None:
                 continue
 
-            await socket_manager.broadcast(
-                {"client": user.name, "cid": handle.id, "sheet": sheet, "action": "SetSheet"}, exclusions={websocket}
-            )
-            if sheet:
-                socket_context[handle.id] = {"sheet": sheet, "client": user.name}
+            socket_context.setdefault(sheet_id, {"method": None, "users": {}})
+
+            if action == "Open":
+                socket_context[sheet_id]["method"] = sheet.get("method", "sheet")
+                socket_context[sheet_id]["users"][handle.id] = user.name
+                socket_current_sheet_per_user[handle.id] = sheet_id
+            elif action == "Close":
+                socket_context[sheet_id]["users"].pop(handle.id, None)
+                if not socket_context[sheet_id]["users"]:
+                    socket_context.pop(sheet_id, None)
+                socket_current_sheet_per_user.pop(handle.id, None)
+                await socket_manager.broadcast({"action": "Close", "id": handle.id, "sheet_id": sheet_id})
+                continue
             else:
-                socket_context.pop(handle.id, None)
+                continue
+
+            await socket_manager.broadcast({"action": "Open", "sheet_id": sheet_id, "sheet": socket_context[sheet_id]})
     except (WebSocketDisconnect, WebSocketException):
         pass
     finally:
         socket_manager.disconnect(websocket)
-        if socket_context.get("__formulas") == handle.id:
-            socket_context.pop("__formulas")
-            await socket_manager.broadcast({"action": "CloseFormulas"})
-        await socket_manager.broadcast({"client": user.name, "cid": handle.id, "sheet": None, "action": "SetSheet"})
-        socket_context.pop(handle.id, None)
+        if formula_data := socket_context.get("__formulas", None):
+            formula_data["users"].pop(handle.id, None)
+            if not formula_data["users"]:
+                socket_context.pop("__formulas", None)
+        sheet = socket_current_sheet_per_user.pop(handle.id, None)
+        if sheet is not None:
+            socket_context[sheet]["users"].pop(handle.id, None)
+            if not socket_context[sheet]["users"]:
+                socket_context.pop(sheet, None)
+            await socket_manager.broadcast({"action": "Close", "id": handle.id, "sheet_id": sheet})
