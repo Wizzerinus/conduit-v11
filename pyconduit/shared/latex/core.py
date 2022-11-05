@@ -100,7 +100,8 @@ class TextCommand(LatexCommand):
             or (len(args) == self.num_args - 1 and self.optional_arg is None)
         ):
             raise ValueError(
-                locale["latex"]["invalid-args"] % dict(expected=self.num_args, actual=len(args)), name=node.name
+                locale["exceptions"]["invalid_argcount"]
+                % dict(expected=self.num_args, actual=len(args), name=node.name)
             )
 
         if len(args) == self.num_args:
