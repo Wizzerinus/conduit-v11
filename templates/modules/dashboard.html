@@ -10,5 +10,125 @@
     {% endfor %}
     </ul>
 
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#settings-modal">
+        {{ locale.pages.index.settings }}
+    </button>
+
+    <div id="settings-modal" class="modal fade" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ locale.titles.change_settings_modal }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    {% include "parts/vue-alert.html" %}
+
+                    <div class="row">
+                        <div class="col">
+                            <label class="form-label" for="current_password">
+                                {{ locale.pages.index.current_password }}
+                            </label>
+                        </div>
+                        <div class="col">
+                            <input class="form-control" type="password" v-model="current_password" id="current_password" />
+                        </div>
+                    </div>
+
+                    <div class="row mt-2">
+                        <div class="col">
+                            <label class="form-label" for="new_password">
+                                {{ locale.pages.index.new_password }}
+                            </label>
+                        </div>
+                        <div class="col">
+                            <input class="form-control" type="password" v-model="new_password" id="new_password" />
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col">
+                            <label class="form-label" for="confirm_password">
+                                {{ locale.pages.index.confirm_password }}
+                            </label>
+                        </div>
+                        <div class="col">
+                            <input class="form-control" type="password" v-model="confirm_password" id="confirm_password" />
+                        </div>
+                    </div>
+                    <div class="row mt-2 mb-4">
+                        <div class="col"></div>
+                        <div class="col-auto">
+                            <button type="button" class="btn btn-secondary" @click="changePassword">
+                                {{ locale.pages.index.change_password }}
+                            </button>
+                        </div>
+                    </div>
+
+                    {% if user.privileges.conduit_generation %}
+                    <div class="row mt-2 mb-4">
+                        <div class="col">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="conduit-view" v-model="allow_conduit_view" />
+                                <label class="form-check-label" for="conduit-view">{{ locale.pages.index.allow_viewing_conduits }}</label>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn btn-primary" type="button" @click="saveConduitSettings">
+                                {{ locale.common.btn_save }}
+                            </button>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ locale.common.btn_close }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const app = {
+        data() {
+            return {
+                alert: new AlertModule(),
+                current_password: "",
+                allow_conduit_view: {{ "true" if user.allow_conduit_view else "false" }},
+                new_password: "",
+                confirm_password: "",
+            }
+        },
+        methods: {
+            async saveConduitSettings() {
+                try {
+                    const response = await axios.post("/login/conduit-settings", {
+                        current_password: this.current_password,
+                        allow_conduit_view: this.allow_conduit_view,
+                    })
+                    this.alert.set(response.data.message, "success")
+                } catch(e) {
+                    this.alert.set(e.response.data.detail, "danger")
+                }
+            },
+            async changePassword() {
+                try {
+                    const response = await axios.post("/login/change-password", {
+                        current_password: this.current_password,
+                        new_password: this.new_password,
+                        new_password_confirm: this.confirm_password,
+                    })
+                    this.alert.set(response.data.message, "success")
+                } catch(e) {
+                    this.alert.set(e.response.data.detail, "danger")
+                }
+            }
+        }
+    }
+
+    const vue = Vue.createApp(app)
+    vue.config.compilerOptions.delimiters = ["[[", "]]"]
+    vue.mount("#settings-modal")
+    </script>
+
     {% include "parts/last-sheets.html" %}
 {% endblock %}

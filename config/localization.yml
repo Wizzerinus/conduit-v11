@@ -6,6 +6,7 @@ titles:
   conduit_editor: Редактор плюсника
   edit_user_modal: Редактирование пользователя
   bulk_create_users_modal: Создание пользователей
+  change_settings_modal: Изменение настроек
 navbar:
   index: Главная
   sheet_editor: Редактор листков
@@ -52,6 +53,8 @@ exceptions:
   nesting_limit: Превышен лимит вложенности команд (%(limit)i)!
   latex_big: LaTeX файл слишком большой! Ожидалось не более %(limit)i символов, получено %(actual)i.
   need_force_regen: Используется force стратегия перестройки кондуитов, но кондуит уже есть. Добавьте в документ '__FORCE_REGEN__'.
+  passwords_mismatch: Пароли не совпадают!
+  no_conduit_for_user: У пользователя нет кондуита!
 
 common:
   last_sheets: Последние листочки
@@ -67,6 +70,15 @@ pages:
   index:
     login_for_full_access: Войдите в систему для полного доступа к сайту.
     logged_in_as: "Вы вошли в систему как %(name)s. Ваши права доступа:"
+    settings: Настройки
+    current_password: Текущий пароль
+    allow_viewing_conduits: Разрешить просмотр кондуитов другим ученикам
+    new_password: Новый пароль
+    confirm_password: Повторите пароль
+    change_password: Изменить пароль
+    password_changed: Пароль успешно изменен!
+    conduit_settings_changed: Настройки успешно изменены!
+    invalid_password_length: Пароль должен быть длиной от 6 до 64 символов!
   admin:
     bulk_create_howto: Укажите одно имя на строку. Для каждого нового пользователя, который ещё не существует, к имени будут добавлены логин и пароль.
     btn_edit_user: Редактировать

@@ -22,6 +22,8 @@ class User(BaseModel):
     name: str
     privileges: Privileges
 
+    allow_conduit_view: bool = True
+
 
 class UserSensitive(BaseModel):
     login: str
@@ -39,3 +41,16 @@ class RegisterUser(BaseModel):
 class BulkRegister(BaseModel):
     teachers: bool
     users: str
+
+
+class AuthorizedRequest(BaseModel):
+    current_password: str
+
+
+class ChangePasswordRequest(AuthorizedRequest):
+    new_password: str
+    new_password_confirm: str
+
+
+class ConduitSettingsRequest(AuthorizedRequest):
+    allow_conduit_view: bool

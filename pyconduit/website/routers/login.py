@@ -1,15 +1,15 @@
 import hashlib
 import hmac
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Body, Depends, FastAPI, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
 
-from pyconduit.models.user import RegisterUser
+from pyconduit.models.user import ChangePasswordRequest, ConduitSettingsRequest, RegisterUser, User
 from pyconduit.shared.datastore import datastore_manager
 from pyconduit.shared.helpers import get_config
-from pyconduit.website.decorators import RequireScope, create_access_token, find_user, flash_message
+from pyconduit.website.decorators import RequireScope, create_access_token, find_user, flash_message, require_login
 
 login_app = FastAPI()
 secrets = get_config("secrets")
@@ -62,6 +62,43 @@ async def logout(request: Request, response: Response):
     request.session.pop("access_token", None)
     response.status_code = 302
     return "/"
+
+
+@login_app.post("/change-password")
+async def change_password(user: User = Depends(require_login), password: ChangePasswordRequest = Body(...)):
+    if len(password.new_password) < 6 or len(password.new_password) > 64:
+        raise HTTPException(status_code=400, detail=locale["exceptions"]["invalid_password_length"])
+
+    if password.new_password != password.new_password_confirm:
+        raise HTTPException(status_code=400, detail=locale["exceptions"]["passwords_mismatch"])
+
+    password_hash = hash_password(password.current_password, user.salt)
+    if not hmac.compare_digest(password_hash, user.password):
+        raise HTTPException(status_code=401, detail=locale["exceptions"]["invalid_credentials"])
+
+    new_password, salt = default_hash(password.new_password)
+    with datastore.operation():
+        accounts = datastore.get("accounts", {})
+        user_acc = accounts.get(user.login, {})
+        user_acc["password"] = new_password
+        user_acc["salt"] = salt
+    return {"message": locale["pages"]["index"]["password_changed"]}
+
+
+@login_app.post("/conduit-settings")
+async def conduit_settings(user: User = Depends(require_login), settings: ConduitSettingsRequest = Body(...)):
+    if not user.privileges.conduit_generation:
+        raise HTTPException(status_code=400, detail=locale["exceptions"]["no_conduit_for_user"])
+
+    password_hash = hash_password(settings.current_password, user.salt)
+    if not hmac.compare_digest(password_hash, user.password):
+        raise HTTPException(status_code=401, detail=locale["exceptions"]["invalid_credentials"])
+
+    with datastore.operation():
+        accounts = datastore.get("accounts", {})
+        user_acc = accounts.get(user.login, {})
+        user_acc["allow_conduit_view"] = settings.allow_conduit_view
+    return {"message": locale["pages"]["index"]["conduit_settings_changed"]}
 
 
 @login_app.post("/register", dependencies=[Depends(require_admin)])
