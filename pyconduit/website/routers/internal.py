@@ -14,7 +14,7 @@ async def shutdown_task():
     subprocess.run(["killall", "uvicorn"])
 
 
-@internal_app.get("/update")
+@internal_app.post("/update")
 async def update_server():
     subprocess.run(["git", "pull"])
     # cron job will pick the server back up if it dies
@@ -23,7 +23,7 @@ async def update_server():
     return {}
 
 
-@internal_app.get("/maintenance")
+@internal_app.post("/maintenance")
 async def start_maintenance():
     Path("PIDlock").touch()
     async with anyio.create_task_group() as tg:
