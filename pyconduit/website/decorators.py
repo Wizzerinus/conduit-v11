@@ -66,8 +66,13 @@ async def get_user_by_token(token: str) -> None | User:
     return find_user(username_pair[1])
 
 
-async def get_current_user(request: Request, token: str | None = Depends(oauth2_scheme)) -> None | User:
-    token = token or request.session.get("access_token")
+async def get_current_user(request: Request = None, token: str | None = Depends(oauth2_scheme)) -> None | User:
+    if request is not None and token is None:
+        token = request.session.get("access_token")
+        if token is None:
+            auth = request.headers.get("Authorization", "")
+            if auth.startswith("Bearer "):
+                token = auth[7:]
     if token is None:
         return None
     return await get_user_by_token(token)

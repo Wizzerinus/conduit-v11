@@ -8,6 +8,7 @@ class Privileges(BaseModel):
     conduit_edit: bool = False
     sheets_edit: bool = False
     formula_edit: bool = False
+    technical_operations: bool = False
 
     def has_scope(self, scope: str) -> bool:
         return getattr(self, scope, False)
@@ -22,6 +23,7 @@ class User(BaseModel):
     salt: str
     name: str
     privileges: Privileges
+    virtual: bool = False
 
     allow_conduit_view: bool = True
 
@@ -30,6 +32,7 @@ class UserSensitive(BaseModel):
     login: str
     name: str
     privileges: Privileges = None
+    virtual: bool = False
 
 
 class RegisterUser(BaseModel):

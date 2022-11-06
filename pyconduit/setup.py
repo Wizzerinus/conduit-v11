@@ -3,9 +3,12 @@ import secrets
 import subprocess
 import sys
 import time
+from datetime import timedelta
 
 import click
 import yaml
+
+from pyconduit.website.decorators import create_access_token
 
 
 @click.group()
@@ -76,7 +79,7 @@ def import_conduits(sheet_id: str, user_order_file: str, conduit_tsv: str):
     with open(user_order_file) as f:
         user_order = [line.strip() for line in f]
 
-    username_dict = {x.name: x.login for x in accounts.accounts.values()}
+    username_dict = {x.name: x.login for x in accounts.accounts.values() if not x.virtual}
     user_order = [username_dict[x] for x in user_order]
 
     with open(conduit_tsv) as f:
@@ -96,6 +99,28 @@ def import_conduits(sheet_id: str, user_order_file: str, conduit_tsv: str):
         conduit = sheet.conduit
         for user_login, conduit_data in zip(user_order, conduit_data):
             conduit.content[user_login] = conduit_data + [""] * (len(conduit.problem_names) - len(conduit_data))
+
+
+@cli.command()
+def create_techops_bot():
+    from pyconduit.models.user import Privileges
+    from pyconduit.shared.datastore import datastore_manager
+
+    datastore = datastore_manager.get("accounts")
+
+    username = "_techops_bot"
+    privileges = Privileges(conduit_generation=False, technical_operations=True)
+    with datastore.operation():
+        accounts = datastore.accounts
+        if username in accounts:
+            del accounts[username]
+
+        accounts[username] = dict(
+            login=username, password="", salt="nologin;", name="Techops Bot", privileges=privileges.dict(), virtual=True
+        )
+
+    token = create_access_token(dict(sub=f"user:{username}"), expire=timedelta(hours=8760))
+    print(f"Access token = '{token}'")
 
 
 if __name__ == "__main__":
