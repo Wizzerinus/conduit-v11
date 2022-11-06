@@ -108,6 +108,7 @@ pages:
     teacher: "Принимающий: "
     editor: "Оценку выставил "
     set_for: Выставляю за
+    set_value: Значение
     successfully_saved: Кондуит сохранён!
     error_while_saving: Произошла ошибка при сохранении кондуита
     formulas: Формулы

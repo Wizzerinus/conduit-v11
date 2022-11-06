@@ -9,26 +9,28 @@
         <div class="saved-symbol" v-if="unsaved_changes">*</div>
 
         <div class="row">
-            <div class="col-3 list-group">
-                <span v-for="(sheet, index) in sheet_list" :title="getTitle(sheet)">
-                    <button type="button" class="list-group-item list-group-item-action"
-                            :disabled="isDisabled(sheet)" :class="getColor(sheet, index)" @click="openSheet(sheet)">
-                        [[ sheet.name ]]
+            <div class="col-3 height-sheet-editor overflow-auto">
+                <div class="list-group">
+                    <button type="button" class="list-group-item list-group-item-action list-group-item-primary" @click="newSheet">
+                        {{ locale.pages.sheet_editor.btn_add_sheet }}
                     </button>
-                </span>
-                <button type="button" class="list-group-item list-group-item-action list-group-item-primary" @click="newSheet">
-                    {{ locale.pages.sheet_editor.btn_add_sheet }}
-                </button>
-                <button type="button" class="list-group-item list-group-item-action list-group-item-danger" @click="deleteSheet">
-                    {{ locale.pages.sheet_editor.btn_remove_sheet }}
-                </button>
+                    <button type="button" class="list-group-item list-group-item-action list-group-item-danger" @click="deleteSheet">
+                        {{ locale.pages.sheet_editor.btn_remove_sheet }}
+                    </button>
+                    <span v-for="(sheet, index) in sheet_list" :title="getTitle(sheet)">
+                        <button type="button" class="list-group-item list-group-item-action"
+                                :disabled="isDisabled(sheet)" :class="getColor(sheet, index)" @click="openSheet(sheet)">
+                            [[ sheet.name ]]
+                        </button>
+                    </span>
+                </div>
             </div>
             <div class="col-9">
                 <div id="ace-editor-teleport"></div>
             </div>
         </div>
     </div>
-    <div id="ace-editor"></div>
+    <div id="ace-editor" class="height-sheet-editor"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.12.5/ace.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.12.5/mode-latex.min.js"></script>

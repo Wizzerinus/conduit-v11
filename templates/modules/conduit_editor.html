@@ -5,7 +5,7 @@
 
     <div id="cdt-editor-app">
         <div v-if="current_sheet" class="mb-4">
-            <div class="table-responsive" id="conduit-editor">
+            <div class="table-responsive height-conduit-editor">
                 <table class="table table-freezer table-conduit table-hover">
                     <thead>
                         <tr>
@@ -29,23 +29,38 @@
                 </table>
             </div>
         </div>
-        <div class="btn-toolbar position-absolute bottom-0 start-0 mb-4 ms-4">
-            <div class="input-group me-2">
-                <input type="text" class="form-control" placeholder="{{ locale.pages.conduit.set_for }}" v-model="teacher_setting">
+
+        <div class="position-absolute bottom-0 start-0 mb-4 ms-4">
+            <div class="mb-3">
+                <div class="btn-group me-2 overflow-auto" style="max-width: 90vw">
+                    <button v-for="(sheet, index) in sheet_list" :title="getTitle(sheet)" type="button" class="btn"
+                            :disabled="isDisabled(sheet.id)" :class="getColor(sheet.id, index)" @click="openSheet(sheet)">
+                        [[ sheet.name.replace(" ", "&nbsp;") ]]
+                        <span class="badge bg-primary rounded-pill" v-if="countConnections(sheet.id)">
+                            [[ countConnections(sheet.id) ]]
+                        </span>
+                    </button>
+                    {# ngl sorta stinky that without changing to &nbsp; it overflows with a large number of sheets #}
+                </div>
             </div>
 
-            <div class="btn-group me-2">
-                <button class="btn btn-success" @click="saveConduit">{{ locale.common.btn_save }}</button>
-                {% if user.privileges.formula_edit %}
-                <button class="btn btn-secondary" @click="loadFormulas" data-bs-toggle="modal"
-                        data-bs-target="#modal-formula-editor" :disabled="isDisabled('__formulas')">
-                    {{ locale.pages.conduit.formulas }}
-                </button>
-                {% endif %}
-                <button v-for="(sheet, index) in sheet_list" :title="getTitle(sheet)" type="button" class="btn"
-                        :disabled="isDisabled(sheet.id)" :class="getColor(sheet.id, index)" @click="openSheet(sheet)">
-                    [[ sheet.name ]]
-                </button>
+            <div class="btn-toolbar">
+                <div class="input-group me-2">
+                    <input type="text" class="form-control form-control-toolbar"
+                           placeholder="{{ locale.pages.conduit.set_for }}" v-model="teacher_setting">
+                    <input type="text" class="form-control form-control-toolbar-small"
+                           placeholder="{{ locale.pages.conduit.set_value }}" v-model="value_setting">
+                </div>
+
+                <div class="btn-group me-2">
+                    <button class="btn btn-success" @click="saveConduit">{{ locale.common.btn_save }}</button>
+                    {% if user.privileges.formula_edit %}
+                    <button class="btn btn-secondary" @click="loadFormulas" data-bs-toggle="modal"
+                            data-bs-target="#modal-formula-editor" :disabled="isDisabled('__formulas')">
+                        {{ locale.pages.conduit.formulas }}
+                    </button>
+                    {% endif %}
+                </div>
             </div>
         </div>
 
@@ -91,6 +106,7 @@
                 unsaved_changes: false,
                 other_users: {},
                 teacher_setting: username,
+                value_setting: 1,
                 handle: -1,
             }
         },
@@ -137,6 +153,11 @@
             isDisabled(sheet) {
                 return this.other_users[sheet] !== undefined && this.other_users[sheet].method === "sheet" &&
                     !this.other_users[sheet].users[this.handle]
+            },
+            countConnections(sheet) {
+                if (!this.other_users[sheet])
+                    return 0
+                return Object.keys(this.other_users[sheet].users).length
             },
             getTitle(sheet) {
                 const userdata = this.other_users[sheet.id]
@@ -185,7 +206,7 @@
 
                 const date = new Date().toLocaleDateString("ru-RU", {year: "numeric", month: "2-digit", day: "2-digit"})
                 const old_value = this.getCellValue(this.current_sheet.conduit.content[user.login][index])
-                const mark = old_value && old_value !== "0" ? "0" : "1"
+                const mark = old_value && old_value !== "0" ? "0" : this.value_setting
                 const value = `${mark};${date};${this.teacher_setting};${username}`
                 this.current_sheet.conduit.content[user.login][index] = value
                 this.unsaved_commits[user.login][this.current_sheet.real_indices[index]] = value

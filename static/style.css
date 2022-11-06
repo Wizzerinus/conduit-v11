@@ -1,6 +1,9 @@
 #ace-editor {
-    height: calc(100vh - 177px);
     width: 100%;
+}
+
+.height-sheet-editor {
+    height: calc(100vh - 177px);
 }
 
 #ace-editor-formulas {
@@ -8,12 +11,12 @@
     width: 100%;
 }
 
-#katex-viewer {
+.height-sheet-viewer {
     height: calc(100vh - 112px);
 }
 
-#conduit-editor {
-    height: calc(100vh - 295px);
+.height-conduit-editor {
+    height: calc(100vh - 323px);
 }
 
 .saved-symbol {
@@ -60,6 +63,7 @@
 
 .table-conduit td:first-child, .table-conduit th:first-child {
     min-width: 220px;
+    width: 220px;
 }
 
 .table-conduit td:not(:first-child), .table-conduit th:not(:first-child) {
@@ -79,4 +83,12 @@
 
 .conduit-cell-editable {
     cursor: pointer;
+}
+
+.form-control-toolbar {
+    width: 180px !important;
+}
+
+.form-control-toolbar-small {
+    width: 120px !important;
 }
