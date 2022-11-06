@@ -155,7 +155,12 @@ async def save_file(file_id: str, unsaved_changes: dict = Body(..., embed=True))
                 real_rows[user_login] = data
 
         await socket_manager.broadcast(
-            {"action": "ConduitUpdate", "changes": unsaved_changes, "styles": conduit_doc.styles,
-             "virtual_rows": virtual_rows, "real_rows": real_rows}
+            {
+                "action": "ConduitUpdate",
+                "changes": unsaved_changes,
+                "styles": conduit_doc.styles,
+                "virtual_rows": virtual_rows,
+                "real_rows": real_rows,
+            }
         )
     return {"success": True}

@@ -177,20 +177,22 @@ async def editor_websocket(websocket: WebSocket):
             socket_context.setdefault(sheet_id, {"method": None, "users": {}})
 
             if action == "Open":
+                current_sheet_id = socket_current_sheet_per_user.get(handle.id)
+                if current_sheet_id is not None:
+                    await socket_manager.broadcast({"action": "Close", "id": handle.id, "sheet_id": current_sheet_id})
                 socket_context[sheet_id]["method"] = sheet.get("method", "sheet")
                 socket_context[sheet_id]["users"][handle.id] = user.name
                 socket_current_sheet_per_user[handle.id] = sheet_id
+                await socket_manager.broadcast(
+                    {"action": "Open", "sheet_id": sheet_id, "sheet": socket_context[sheet_id]}
+                )
             elif action == "Close":
                 socket_context[sheet_id]["users"].pop(handle.id, None)
                 if not socket_context[sheet_id]["users"]:
                     socket_context.pop(sheet_id, None)
                 socket_current_sheet_per_user.pop(handle.id, None)
                 await socket_manager.broadcast({"action": "Close", "id": handle.id, "sheet_id": sheet_id})
-                continue
-            else:
-                continue
 
-            await socket_manager.broadcast({"action": "Open", "sheet_id": sheet_id, "sheet": socket_context[sheet_id]})
     except (WebSocketDisconnect, WebSocketException):
         pass
     finally:
