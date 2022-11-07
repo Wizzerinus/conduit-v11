@@ -32,15 +32,14 @@
 
         <div class="position-absolute bottom-0 start-0 mb-4 ms-4">
             <div class="mb-3">
-                <div class="btn-group me-2 overflow-auto" style="max-width: 90vw">
+                <div class="btn-group me-2 overflow-auto text-nowrap" style="max-width: 90vw">
                     <button v-for="(sheet, index) in sheet_list" :title="getTitle(sheet)" type="button" class="btn"
                             :disabled="isDisabled(sheet.id)" :class="getColor(sheet.id, index)" @click="openSheet(sheet)">
-                        [[ sheet.name.replace(" ", "&nbsp;") ]]
+                        [[ sheet.name ]]
                         <span class="badge bg-primary rounded-pill" v-if="countConnections(sheet.id)">
                             [[ countConnections(sheet.id) ]]
                         </span>
                     </button>
-                    {# ngl sorta stinky that without changing to &nbsp; it overflows with a large number of sheets #}
                 </div>
             </div>
 
