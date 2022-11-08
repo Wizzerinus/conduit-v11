@@ -45,10 +45,14 @@
     background-clip: padding-box;
 }
 
+.table-freezer td:first-child {
+    z-index: 20000;
+}
+
 .table-freezer thead, .table-freezer th:first-child {
     position: sticky;
     top: 0;
-    z-index: 2;
+    z-index: 21000;
 }
 
 .table-freezer th {
@@ -61,6 +65,25 @@
     border: 1px solid dimgray !important;
 }
 
+.table-chover td, .table-chover th {
+    position: relative;
+}
+
+.table-chover {
+    overflow: hidden;
+}
+
+.table-chover td:not(:first-child):hover::after {
+    background-color: #f0f0f0;
+    content: '\00a0';
+    height: 10000px;
+    left: 0;
+    position: absolute;
+    top: -5000px;
+    width: 100%;
+    z-index: -10000;
+}
+
 .table-conduit td:first-child, .table-conduit th:first-child {
     min-width: 220px;
     width: 220px;
@@ -71,10 +94,6 @@
     min-width: 47px;
     text-align: center;
     padding: 2px 2px 10px 2px;
-}
-
-.table-conduit td {
-    border: 1px solid black;
 }
 
 .conduit-unsaved-cell {
