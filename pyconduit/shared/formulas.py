@@ -132,11 +132,11 @@ class FormulaProvider:
 
             values_recalc = []
             for i in values_ints:
-                if i < min_value:
+                if i <= min_value:
                     values_recalc.append(0)
-                elif i > max_value:
+                elif i >= max_value:
                     values_recalc.append(1)
-                elif i < mid_value:
+                elif i <= mid_value:
                     values_recalc.append(1 / 2 * (i - min_value) / (mid_value - min_value))
                 else:
                     values_recalc.append(1 / 2 * (i - mid_value) / (max_value - mid_value) + 1 / 2)

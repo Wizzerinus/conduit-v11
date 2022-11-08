@@ -126,6 +126,9 @@
                     delete this.other_users[sheet_id]
             },
             ws_onConduitUpdate(data) {
+                if (!this.current_sheet || data.file_id !== this.current_sheet.id)
+                    return
+
                 this.current_sheet.styles = data.styles
                 for (const username of Object.keys(data.changes)) {
                     const problems = data.changes[username]
@@ -242,6 +245,7 @@
 
                 this.last_sheet = ""
                 this.alert.clear()
+                const old_sheet_id = this.current_sheet ? this.current_sheet.id : ""
                 try {
                     const response = await axios.get(`/conduit/content/${sheet.id}`)
                     this.current_sheet = response.data
@@ -255,6 +259,9 @@
                     this.have_unsaved_commits = false
                     for (const user of this.current_sheet.users) {
                         this.unsaved_commits[user.login] = {}
+                    }
+                    if (old_sheet_id) {
+                        wss.send({action: "Close", id: old_sheet_id})
                     }
                     wss.send({action: "Open", method: "conduit", id: sheet.id})
                     if (this.current_sheet.formula_error) {

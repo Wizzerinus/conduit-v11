@@ -157,6 +157,7 @@ async def save_file(file_id: str, unsaved_changes: dict = Body(..., embed=True))
         await socket_manager.broadcast(
             {
                 "action": "ConduitUpdate",
+                "file_id": file_id,
                 "changes": unsaved_changes,
                 "styles": conduit_doc.styles,
                 "virtual_rows": virtual_rows,

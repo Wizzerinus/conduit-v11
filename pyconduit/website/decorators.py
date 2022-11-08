@@ -2,12 +2,13 @@ import functools
 import json
 from datetime import datetime, timedelta
 
+import anyio
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from starlette.requests import Request
 from starlette.templating import Jinja2Templates
-from starlette.websockets import WebSocket
+from starlette.websockets import WebSocket, WebSocketDisconnect
 
 from pyconduit.models.user import User
 from pyconduit.shared.datastore import datastore_manager, deatomize
@@ -128,16 +129,21 @@ class SocketHandle:
         self.ws = ws
         self.id = alloc
 
-    async def receive_text(self) -> str:
+    async def receive_text(self, period: float = None) -> str:
         while True:
-            text = await self.ws.receive_text()
-            if text == "__ping":
-                await self.ws.send_text("__pong")
+            try:
+                with anyio.fail_after(period):
+                    text = await self.ws.receive_text()
+            except TimeoutError:
+                raise WebSocketDisconnect()
             else:
-                return text
+                if text == "__ping":
+                    await self.ws.send_text("__pong")
+                else:
+                    return text
 
-    async def receive_json(self) -> dict:
-        return json.loads(await self.receive_text())
+    async def receive_json(self, period: float = None) -> dict:
+        return json.loads(await self.receive_text(period))
 
 
 class SocketManager:

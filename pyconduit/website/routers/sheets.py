@@ -169,7 +169,7 @@ async def editor_websocket(websocket: WebSocket):
             {"action": "Init", "files": list(reversed(file_dict)), "open_sheets": socket_context, "handle": handle.id}
         )
         while True:
-            sheet = await handle.receive_json()
+            sheet = await handle.receive_json(period=26.5)
             action, sheet_id = sheet.get("action"), sheet.get("id")
             if sheet_id is None:
                 continue
