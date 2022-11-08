@@ -181,7 +181,8 @@
             },
 
             getCellValue(val) {
-                return val.split(";", 1)[0]
+                val = val.split(";", 1)[0]
+                return val === "0" ? "" : val
             },
             getCellTitle(val) {
                 const parts = val.split(";")
