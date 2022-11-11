@@ -6,10 +6,9 @@ from typing import Callable, TypeVar
 import _queue
 from asteval import Interpreter
 from coloraide import Color
-from coloraide.interpolate import Interpolator
 
 from pyconduit.models.conduit import ConduitContent
-from pyconduit.models.user import UserSensitive
+from pyconduit.models.user import UserUnprivileged
 
 formula_lock = multiprocessing.Lock()
 Position = int | None
@@ -50,6 +49,8 @@ class FormulaProvider:
         self.usernames = {user.login: user.name for user in doc.users}
         self.problem_names = list(doc.conduit.problem_names)
         self.problem_name_set = set(self.problem_names)
+        self.limited_rows = []
+        self.limited_columns = []
 
     @staticmethod
     def base_value(value: str) -> str:
@@ -63,15 +64,20 @@ class FormulaProvider:
     def is_real(self, row_id: str, column_id: str) -> bool:
         return row_id[0] != "_" and column_id in self.problem_name_set
 
-    def add_column(self, position: Position, name: str, callback: ConduitCallback):
+    def add_column(self, position: Position, name: str, callback: ConduitCallback, is_limited: bool = False):
         insert_into(self.doc.conduit.problem_names, name, position)
         for user, row in self.doc.conduit.content.items():
             value = str(callback(position, user, self.usernames.get(user, user), list(row)))
             insert_into(row, value, position)
 
-    def add_row(self, position: Position, row_id: str, row_name: str, callback: ConduitCallback):
+        if is_limited:
+            self.limited_columns.append(name)
+
+    def add_row(
+        self, position: Position, row_id: str, row_name: str, callback: ConduitCallback, is_limited: bool = False
+    ):
         row_id = f"_{row_id}"
-        insert_into(self.doc.users, UserSensitive(login=row_id, name=row_name), position)
+        insert_into(self.doc.users, UserUnprivileged(login=row_id, name=row_name), position)
         self.usernames[row_id] = row_name
         values = []
         for index, problem in enumerate(self.doc.conduit.problem_names):
@@ -82,6 +88,9 @@ class FormulaProvider:
             )
             values.append(value)
         self.doc.conduit.content[row_id] = values
+
+        if is_limited:
+            self.limited_rows.append(row_id)
 
     def add_formatter(self, callback: FormatterCallback):
         for index, problem in enumerate(self.doc.conduit.problem_names):
@@ -153,7 +162,10 @@ class FormulaProvider:
 
 def run_formula(aev: Interpreter, formula: str, return_dict: dict[str, str]):
     aev(formula)
-    return_dict["value"] = aev.symtable["provider"].doc.dict()
+    document = aev.symtable["provider"].doc
+    document.limited_rows = aev.symtable["provider"].limited_rows
+    document.limited_columns = aev.symtable["provider"].limited_columns
+    return_dict["value"] = document.dict()
 
 
 class Interstream:

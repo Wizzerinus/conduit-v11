@@ -103,6 +103,10 @@ pages:
     btn_add_sheet: Создать листок
     btn_remove_sheet: Удалить листок
     missing_cache_strategy: "Следующие задачи пропали из листка: %s. Кондуит не был сгенерирован."
+
+  sheet_viewer:
+    mode_sheet: Листочек
+    mode_conduit: Кондуит
   conduit:
     submit_date: "Дата сдачи: "
     teacher: "Принимающий: "

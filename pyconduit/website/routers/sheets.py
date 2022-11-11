@@ -10,6 +10,7 @@ from websockets.exceptions import WebSocketException
 from pyconduit.models.bundle import BundleDocument
 from pyconduit.models.latex import LatexRequest
 from pyconduit.models.user import User
+from pyconduit.shared.conduit_postprocessing import postprocess_limited_conduit
 from pyconduit.shared.conduit_regeneration import regen_strategies
 from pyconduit.shared.datastore import datastore_manager, deatomize
 from pyconduit.shared.helpers import get_config
@@ -110,8 +111,8 @@ async def create_file(file_data: LatexRequest = Body(...), user: User = Depends(
     return {"success": True, "html_content": html_content, "sheet_id": compiled_latex.sheet_id, "warning": warning}
 
 
-@sheets_app.get("/file/{file_id}", response_class=HTMLResponse)
-async def read_file(file_id: str):
+@sheets_app.get("/file/{file_id}")
+async def read_file(file_id: str, user: User = Depends(get_current_user)):
     if file_id not in datastore.sheets:
         raise HTTPException(status_code=404, detail=locale["exceptions"]["file_not_found"] % dict(filename=file_id))
 
@@ -123,7 +124,30 @@ async def read_file(file_id: str):
 
     if bundle_document.latex is None:
         raise HTTPException(status_code=404, detail=locale["exceptions"]["no_latex_sheet"] % dict(filename=file_id))
-    return generate_html(bundle_document.latex)
+
+    solved_problems = {}
+    problems = []
+    styles = []
+    if (
+        user
+        and user.privileges.conduit_generation
+        and bundle_document.conduit
+        and user.login in bundle_document.conduit.content
+        and bundle_document.precomputed
+    ):
+        conduit = bundle_document.precomputed.conduit
+        problems, styles = postprocess_limited_conduit({user.login}, bundle_document)
+        for result, problem in zip(conduit.content[user.login], conduit.problem_names):
+            solved = result.split(";")[0] not in ("0", "")
+            if solved:
+                solved_problems[problem] = 1
+
+    return {
+        "html": generate_html(bundle_document.latex),
+        "solved_problems": solved_problems,
+        "problems": problems,
+        "styles": styles,
+    }
 
 
 @sheets_app.delete("/{file_id}", dependencies=[Depends(RequireScope("sheets_edit"))])

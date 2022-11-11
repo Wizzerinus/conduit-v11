@@ -123,5 +123,34 @@ def create_techops_bot():
     print(f"Access token = '{token}'")
 
 
+@cli.command()
+def precompute_conduits():
+    from pyconduit.models.conduit import Conduit
+    from pyconduit.shared.conduit_postprocessing import calculate_with_formula, get_all_users
+    from pyconduit.shared.datastore import datastore_manager, deatomize
+
+    sheets = datastore_manager.get("sheets")
+    if "sheets" not in sheets:
+        click.echo("No sheets found")
+        return
+
+    formula = sheets.formulas if "formulas" in sheets else ""
+
+    precomputed = {}
+    for sheet_id, sheet in sheets.sheets.items():
+        if not sheet.conduit and not sheet.latex:
+            continue
+
+        conduit = Conduit.parse_obj(deatomize(sheet.conduit))
+        users = get_all_users(conduit)
+        precomputed[sheet_id] = calculate_with_formula(conduit, sheet_id, sheet.latex.sheet_name, users, formula)
+
+    with sheets.operation():
+        for key, value in precomputed.items():
+            sheets.sheets[key].precomputed = value.dict()
+
+    subprocess.run(["killall", "uvicorn"])
+
+
 if __name__ == "__main__":
     cli()

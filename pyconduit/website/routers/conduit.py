@@ -7,9 +7,9 @@ from starlette.responses import HTMLResponse
 
 from pyconduit.models.bundle import BundleDocument
 from pyconduit.models.conduit import Conduit, ConduitContent
-from pyconduit.models.user import User, UserSensitive
+from pyconduit.models.user import User
+from pyconduit.shared.conduit_postprocessing import calculate_with_formula, get_all_users
 from pyconduit.shared.datastore import datastore_manager, deatomize
-from pyconduit.shared.formulas import execute_formula
 from pyconduit.shared.helpers import get_config
 from pyconduit.website.decorators import RequireScope, make_template_data, templates
 from pyconduit.website.routers.sheets import socket_manager
@@ -19,54 +19,6 @@ datastore = datastore_manager.get("sheets")
 accounts = datastore_manager.get("accounts")
 locale = get_config("localization")
 logger = logging.getLogger("pyconduit.website.conduit")
-
-
-def calculate_with_formula(
-    conduit: Conduit, file_id: str, filename: str, users: list[UserSensitive], formula: str
-) -> ConduitContent:
-    conduit_document = ConduitContent(
-        id=file_id,
-        conduit=dict(conduit.dict()),
-        users=users,
-        name=filename,
-        real_indices=list(range(len(conduit.problem_names))),
-    )
-    try:
-        data, answer = execute_formula(conduit_document, formula)
-        if "Error" in answer or "Exception" in answer:
-            logger.warning(answer)
-            conduit_document.formula_error = answer
-        else:
-            conduit_document = ConduitContent.parse_obj(data)
-            real_indices = []
-            for problem in conduit_document.conduit.problem_names:
-                try:
-                    real_indices.append(conduit.problem_names.index(problem))
-                except ValueError:
-                    real_indices.append(-1)
-            conduit_document.real_indices = real_indices
-    except RuntimeError as e:
-        logger.warning("Failed to execute formula for '%s': %s", file_id, e)
-        conduit_document.formula_error = str(e)
-    return conduit_document
-
-
-def get_all_users(conduit: Conduit) -> list[UserSensitive]:
-    users = {
-        login: UserSensitive.parse_obj(deatomize(account))
-        for login, account in accounts.accounts.items()
-        if account["privileges"]["conduit_generation"]
-    }
-
-    for login in conduit.content.keys():
-        if login not in users:
-            if login in accounts.accounts:
-                username = accounts.accounts[login].name
-            else:
-                username = login
-            users[login] = UserSensitive(login=login, name=username)
-
-    return sorted(users.values(), key=lambda user: user.name)
 
 
 @conduit_app.get("/editor", response_class=HTMLResponse)
@@ -164,4 +116,7 @@ async def save_file(file_id: str, unsaved_changes: dict = Body(..., embed=True))
                 "real_rows": real_rows,
             }
         )
+
+        with datastore.operation():
+            datastore.sheets[file_id].precomputed = conduit_doc.dict()
     return {"success": True}

@@ -10,8 +10,30 @@
                 </button>
             </div>
             <div class="col-9">
-                <h2>[[ sheet_names[current_sheet] ]]</h2>
-                <div v-html="sheet_content" v-katex="" class="overflow-auto height-sheet-viewer" id="katex-viewer"></div>
+                <div class="height-sheet-viewer overflow-auto">
+                    <div class="d-flex" v-if="current_sheet">
+                        <h2>[[ sheet_names[current_sheet] ]]</h2>
+                        <button class="btn btn-primary ms-3 mb-3" type="button" v-if="states.length > 1" @click="cycleState">
+                            [[ state_names[nextState] ]]
+                        </button>
+                    </div>
+                    <div v-html="sheet_content" v-katex="" v-show="current_state == 'sheet'" id="katex-viewer"></div>
+                    {% if user and user.privileges.conduit_generation %}
+                    <div class="row mt-3 p-0 m-0" v-show="current_state == 'conduit'">
+                        <div class="col-auto p-0" v-for="(problem, problem_index) in problems">
+                            <table class="table table-conduit table-conduit-limited">
+                                <tr v-for="(cell, index) in problem">
+                                    <td class="conduit-cell" :class="{'first-cell': problem_index == 0}" v-if="index != 0" :title="getCellTitle(cell)"
+                                        :style="getStyle(index, problem_index)">
+                                        [[ getCellValue(cell) ]]
+                                    </td>
+                                    <th class="conduit-cell" v-else="" v-html="getCellValue(cell)"></th>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
@@ -32,6 +54,19 @@
                     sheet_names: {},
                     current_sheet: "",
                     sheet_content: "",
+                    problems: [],
+                    current_state: "sheet",
+                    state_names: {
+                        "sheet": "{{ locale.pages.sheet_viewer.mode_sheet }}",
+                        "conduit": "{{ locale.pages.sheet_viewer.mode_conduit }}",
+                    },
+                    states: [
+                        "sheet",
+                        {% if user and user.privileges.conduit_generation %}
+                            "conduit",
+                        {% endif %}
+                    ],
+                    styles: {},
                 }
             },
 
@@ -42,14 +77,28 @@
                         window.history.pushState({going_back}, "", `/sheets/viewer/${sheet.id}`)
                     try {
                         const response = await axios.get(`/sheets/file/${sheet.id}`)
-                        this.sheet_content = response.data
+                        this.sheet_content = response.data.html
                         this.current_sheet = sheet.id
+                        this.problems = response.data.problems
+                        this.styles = response.data.styles
                         if (hash) {
                             document.location.hash = hash
                             setTimeout(() => document.getElementById(decodeURI(hash.slice(1))).scrollIntoView(true), 0.1)
                         }
+                        setTimeout(() => this.updateConduitFill(response.data.solved_problems), 0.1)
                     } catch (e1) {
                         console.log(e1)
+                    }
+                },
+                updateConduitFill(solved_problems) {
+                    // Note: as the client does not know about the conduit, we have to do this manually
+                    // and can't rely on Vue to do it for us
+                    const problems = document.getElementsByClassName("problem-real")
+                    for (const prob of problems) {
+                        const conduit_number = prob.getAttribute("data-cdt-number")
+                        if (solved_problems[conduit_number]) {
+                            prob.classList.add("problem-solved")
+                        }
                     }
                 },
                 getColor(sheet, index) {
@@ -59,6 +108,31 @@
                     if (index <= 3)
                         return "list-group-item-info"
                     return "list-group-item-secondary"
+                },
+                cycleState() {
+                    const current_index = this.states.indexOf(this.current_state)
+                    this.current_state = this.states[(current_index + 1) % this.states.length]
+                },
+
+                getCellTitle(val) {
+                    const parts = val.split(";")
+                    if (parts.length <= 1)
+                        return null
+                    let value = `{{ locale.pages.conduit.submit_date }}${parts[1]}\n` +
+                                `{{ locale.pages.conduit.teacher }}${parts[2]}`
+                    if (parts[3] && parts[3] !== parts[2])
+                        value += `\n{{ locale.pages.conduit.editor }}${parts[3]}`
+                    return value
+                },
+                getCellValue(val) {
+                    val = val.split(";", 1)[0]
+                    return val === "0" ? "" : val
+                },
+                getStyle(row_index, column_index) {
+                    if (!this.styles[column_index])
+                        return null
+                    const value = this.styles[column_index][row_index]
+                    return value || null
                 },
             },
             async created() {
@@ -75,6 +149,12 @@
                 const init_sheet = "{{ sheet.replace('"', '\\"') }}"
                 if (init_sheet)
                     await this.openSheet({id: init_sheet}, 1, true)
+            },
+            computed: {
+                nextState() {
+                    const current_index = this.states.indexOf(this.current_state)
+                    return this.states[(current_index + 1) % this.states.length]
+                },
             }
         }
 

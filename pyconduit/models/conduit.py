@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from pyconduit.models.user import UserSensitive
+from pyconduit.models.user import UserUnprivileged
 
 """
 Conduit generation strategies:
@@ -32,8 +32,10 @@ class Conduit(BaseModel):
 class ConduitContent(BaseModel):
     id: str
     conduit: Conduit
-    users: list[UserSensitive]
+    users: list[UserUnprivileged]
     name: str
     formula_error: str = ""
     styles: dict[str, dict[str, str]] = {}
     real_indices: list[int] = []  # old index for problems, -1 for virtual columns like "sum"
+    limited_columns: list[str] = []
+    limited_rows: list[str] = []

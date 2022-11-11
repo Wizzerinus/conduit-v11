@@ -35,6 +35,11 @@ class UserSensitive(BaseModel):
     virtual: bool = False
 
 
+class UserUnprivileged(BaseModel):
+    login: str
+    name: str
+
+
 class RegisterUser(BaseModel):
     login: str
     password: constr(min_length=6, max_length=64)

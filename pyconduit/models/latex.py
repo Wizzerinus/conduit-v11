@@ -57,16 +57,17 @@ class LatexProblem(LatexObject):
     conduit_include: bool = True
 
     def make_string(self, allow_recursion: bool = True) -> str:
-        return f"**{self.num}** {self.text}"
+        problem_real = " problem-real" if self.conduit_include else ""
+        return f"<span class='problem{problem_real}' data-cdt-number='{self.conduit_num}'>{self.num}</span> {self.text}"
 
     def newline_before(self) -> bool:
         return self.nlb
 
     def newline_after(self) -> bool:
-        return self.nla
+        return False  # self.nla
 
     def is_inline(self) -> bool:
-        return self.inline
+        return False  # self.inline
 
 
 class LatexInclude(LatexObject):
