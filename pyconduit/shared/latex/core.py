@@ -4,6 +4,7 @@ import re
 from TexSoup import TexNode, TexSoup
 from TexSoup.data import TexCmd, TexText
 
+from pyconduit.shared.datastore import datastore_manager
 from pyconduit.shared.helpers import get_config
 
 cfg = get_config("latex")
@@ -12,6 +13,8 @@ first_problem_character = cfg["iterators"]["first-letter"]
 problem_skips = cfg["iterators"]["letter-skips"]
 problem_skip_indices = [ord(c) - ord(first_problem_character) for c in problem_skips]
 priority_cap = 10000
+Punctuation = ".,;:!?()[]{}"
+image_datastore = datastore_manager.get("images")
 
 
 class MetadataNode:
@@ -25,8 +28,10 @@ class MetadataNode:
             self.kwargs["text"] = ""
 
         if self.collect_text and text is not None:
-            self.kwargs["text"] += text
-        elif not self.collect_text or self.kwargs["text"]:
+            if text and text[0] not in Punctuation:
+                self.kwargs["text"] += " "
+            self.kwargs["text"] += text.strip()
+        elif not self.collect_text or self.kwargs["text"].strip():
             excess_text = ""
             if self.collect_text:
                 # self.kwargs["text"] = self.kwargs["text"].strip()
@@ -87,11 +92,19 @@ class LatexCommand(abc.ABC):
 class TextCommand(LatexCommand):
     hash_regex = re.compile(r"(^|[^\\])#([0-9])")
 
-    def __init__(self, content: str, num_args: int, optional_arg: str = None, trim_contents: bool = False):
+    def __init__(
+        self,
+        content: str,
+        num_args: int,
+        optional_arg: str = None,
+        trim_contents: bool = False,
+        empty_contents: str = None,
+    ):
         self.content = self.hash_regex.sub(lambda t: f"{t[1]}{{{int(t[2]) - 1}}}", content)
         self.num_args = num_args
         self.optional_arg = optional_arg
         self.trim_contents = trim_contents
+        self.empty_contents = empty_contents
 
     def apply(self, context: dict, node: TexNode, *args: str):
         if (
@@ -111,6 +124,9 @@ class TextCommand(LatexCommand):
 
         if self.trim_contents:
             args = [str(a).strip() for a in args]
+
+        if self.empty_contents is not None and not [arg for arg in args if arg]:
+            return self.empty_contents
         return self.content.format(*args)
 
     def recursion_ready(self, cmd: TexNode, all_commands: dict[str, LatexCommand]) -> bool:
@@ -143,24 +159,36 @@ class ItemExtractor(LatexCommand):
 
 
 class TextEnv(TextCommand):
-    def __init__(
-        self, content: str, num_args: int, metaname: str = "text", optional_arg: str = None, trim_contents: bool = False
-    ):
-        super().__init__(content, num_args, optional_arg, trim_contents)
+    def __init__(self, content: str, metaname: str = "text", optional_arg: str = None, trim_contents: bool = False):
+        super().__init__(content, 0, optional_arg, trim_contents)
         self.metaname = metaname
 
     def apply(self, context: dict, node: TexNode, *args: str):
-        if len(args) != 0:
-            raise ValueError(locale["exceptions"]["invalid_env_argcount"] % dict(name=node.name, actual=len(args)))
-
         return (
             MetadataNode(self.metaname),
-            self.content.format("".join(str(c) for c in node.contents)),
+            self.content.format("".join(str(c) for c in node.contents if c not in args)),
             MetadataNode("text"),
         )
 
     def get_priority(self) -> int:
         return -1
+
+
+class WrapfigureEnv(TextCommand):
+    def __init__(self):
+        super().__init__("", 0, None, False)
+        self.metaname = "text"
+
+    def apply(self, context: dict, node: TexNode, *args: str):
+        ans = [MetadataNode("text")]
+        for child in node.contents:
+            if child not in args:
+                ans.append(child)
+        ans.append(MetadataNode("text"))
+        return tuple(ans)
+
+    def get_priority(self) -> int:
+        return -357
 
 
 class ErrorCommand(LatexCommand):
@@ -232,6 +260,7 @@ class ProblemMacro(LatexCommand):
         format_data["ext"] = extra_text
         fmt, cfmt = self.fmt % format_data, self.cfmt % format_data
         fmt = fmt.replace("))", ")")
+        context["last_iterator"] = (cfmt or fmt).rstrip(").")
         return MetadataNode(
             "problem",
             num=fmt,
@@ -246,7 +275,62 @@ class ProblemMacro(LatexCommand):
         return -333
 
 
-def soup_to_command(cmd: TexNode) -> LatexCommand:
+class LabelMacro(LatexCommand):
+    def get_priority(self) -> int:
+        return -333
+
+    def apply(self, context: dict, node: TexNode, *args: str):
+        if len(args) != 1:
+            raise ValueError(locale["exceptions"]["invalid_env_argcount"])
+        if not context.get("last_iterator"):
+            raise ValueError(locale["exceptions"]["label_no_problem"] % dict(label=args[0]))
+
+        context["labels"][args[0]] = context["last_iterator"]
+        return ""
+
+
+class RefMacro(LatexCommand):
+    def get_priority(self) -> int:
+        return -333
+
+    def apply(self, context: dict, node: TexNode, *args: str):
+        if len(args) != 1:
+            raise ValueError(locale["exceptions"]["invalid_env_argcount"])
+        if args[0] not in context["labels"]:
+            context["need_regen"] = True
+            return False
+
+        return f'**{context["labels"][args[0]]}**'
+
+
+class IncludeGraphics(LatexCommand):
+    def apply(self, context: dict, node: TexNode, *args: str):
+        if len(args) < 1:
+            raise ValueError(locale["exceptions"]["invalid_graphics_argcount"])
+
+        filename = args[-1].split("/")[-1]
+        if filename not in image_datastore.images:
+            raise ValueError(locale["exceptions"]["invalid_graphics_filename"] % dict(filename=filename))
+
+        return MetadataNode("image", filename=filename, collect_text=False)
+
+
+class CaptionMacro(LatexCommand):
+    def apply(self, context: dict, node: TexNode, *args: str):
+        if len(args) != 1:
+            raise ValueError(
+                locale["exceptions"]["invalid_argcount"] % dict(name="caption", expected=1, actual=len(args))
+            )
+
+        context["iterators"]["captions"] += 1
+        context["last_iterator"] = context["iterators"]["captions"]
+        return args[0]
+
+    def get_priority(self):
+        return -3
+
+
+def soup_to_command(cmd: TexNode) -> tuple[str, LatexCommand]:
     brace_args = [arg for arg in cmd.args if arg.name == "BraceGroup"]
     bracket_args = [arg for arg in cmd.args if arg.name == "BracketGroup"]
     if len(brace_args) != 2 or len(bracket_args) > 2:
@@ -254,44 +338,62 @@ def soup_to_command(cmd: TexNode) -> LatexCommand:
 
     num_args = 0 if len(bracket_args) == 0 else int(bracket_args[0].contents[0])
     optional_arg = None if len(bracket_args) <= 1 else bracket_args[1].contents[0]
-    return TextCommand(brace_args[1].contents, num_args, optional_arg)
+    name = str(brace_args[0].contents[0]).lstrip("\\")
+    return name, TextCommand(
+        str(brace_args[1].contents[0]).replace("{", "{{").replace("}", "}}"), num_args, optional_arg
+    )
 
 
 def convert_latex(context_commands: dict[str, LatexCommand], latext: str) -> tuple[TexSoup, dict]:
     soup = TexSoup(latext)
-    command_adds = list(soup.find_all("newcommand")) + list(soup.find_all("renewcommand"))
+    command_adds = (
+        list(soup.find_all("newcommand"))
+        + list(soup.find_all("renewcommand"))
+        + list(soup.find_all("newcommand*"))
+        + list(soup.find_all("renewcommand*"))
+    )
     for new_command in command_adds:
-        context_commands[new_command.name] = soup_to_command(new_command)
+        name, command = soup_to_command(new_command)
+        context_commands[name] = command
         new_command.parent.remove(new_command)
+    latext = str(soup)
 
     char_limit = cfg["compilation"]["character-limit"]
     nesting_limit = cfg["compilation"]["command-nesting-limit"]
+    max_regens = 2
     context = {
-        "iterators": {"problem": 0, "letter": 0},
+        "iterators": {"problem": 0, "letter": 0, "captions": 0},
         "commands": context_commands,
+        "labels": {},
     }
 
-    all_priorities = sorted(set(c.get_priority() for c in context_commands.values()), reverse=True)
-    for i in range(nesting_limit):
-        last_stage = priority_cap
-        for priority in all_priorities:
-            command_keys = list(c for c in context_commands.keys() if context_commands[c].get_priority() == priority)
-            for cmd in soup.find_all(command_keys):
-                callback = context_commands[cmd.name]
-                if not callback.recursion_ready(cmd, context_commands):
-                    continue
+    for j in range(max_regens):
+        soup = TexSoup(latext)
+        all_priorities = sorted(set(c.get_priority() for c in context_commands.values()), reverse=True)
+        for i in range(nesting_limit):
+            last_stage = priority_cap
+            for priority in all_priorities:
+                command_keys = list(
+                    c for c in context_commands.keys() if context_commands[c].get_priority() == priority
+                )
+                for cmd in soup.find_all(command_keys):
+                    callback = context_commands[cmd.name]
+                    if not callback.recursion_ready(cmd, context_commands):
+                        continue
 
-                arg_data = [" ".join(str(x) for x in arg.contents) if arg.contents else "" for arg in cmd.args]
-                callback.invoke(context, cmd, *arg_data)
-                last_stage = priority
-                soup_len = len(str(soup))
-                if soup_len > char_limit:
-                    raise ValueError(locale["exceptions"]["latex_big"] % dict(limit=char_limit, size=soup_len))
-            if last_stage == priority:
+                    arg_data = [" ".join(str(x) for x in arg.contents) if arg.contents else "" for arg in cmd.args]
+                    callback.invoke(context, cmd, *arg_data)
+                    last_stage = priority
+                    soup_len = len(str(soup))
+                    if soup_len > char_limit:
+                        raise ValueError(locale["exceptions"]["latex_big"] % dict(limit=char_limit, size=soup_len))
+                if last_stage == priority:
+                    break
+            if last_stage == priority_cap:
                 break
-        if last_stage == priority_cap:
-            break
-    else:
-        raise ValueError(locale["exceptions"]["nesting_limit"] % dict(limit=nesting_limit))
+        else:
+            raise ValueError(locale["exceptions"]["nesting_limit"] % dict(limit=nesting_limit))
 
-    return soup, context
+        if not context.get("need_regen"):
+            return soup, context
+    raise ValueError(locale["exceptions"]["regen_limit"] % dict(limit=max_regens))

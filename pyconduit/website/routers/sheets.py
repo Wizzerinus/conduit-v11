@@ -1,9 +1,11 @@
 import logging
+import pathlib
+import uuid
 
-from fastapi import Body, Depends, FastAPI, HTTPException
+from fastapi import Body, Depends, FastAPI, HTTPException, UploadFile
 from pydantic import ValidationError
 from starlette.requests import Request
-from starlette.responses import HTMLResponse, PlainTextResponse
+from starlette.responses import FileResponse, HTMLResponse, PlainTextResponse
 from starlette.websockets import WebSocket, WebSocketDisconnect
 from websockets.exceptions import WebSocketException
 
@@ -26,11 +28,13 @@ from pyconduit.website.decorators import (
 
 sheets_app = FastAPI()
 datastore = datastore_manager.get("sheets")
+images = datastore_manager.get("images")
 socket_manager = SocketManager()
 socket_context = {}
 socket_current_sheet_per_user = {}
 locale = get_config("localization")
 logger = logging.getLogger("pyconduit.website.sheets")
+MaxFileSize = 1024 * 1024
 
 
 @sheets_app.get("/editor", response_class=HTMLResponse)
@@ -158,6 +162,54 @@ async def delete_file(file_id: str):
         del datastore.sheets[file_id]
     await socket_manager.broadcast({"action": "DeleteSheet", "id": file_id})
     return {"success": True}
+
+
+@sheets_app.post("/figure/{figure_id}")
+async def create_figure(figure_id: str, file: UploadFile):
+    if file.content_type not in ("image/png", "image/jpeg"):
+        raise HTTPException(
+            status_code=400, detail=locale["exceptions"]["invalid_image_type"] % dict(actual=file.content_type)
+        )
+
+    if figure_id in images.images:
+        raise HTTPException(status_code=409, detail=locale["exceptions"]["image_already_exists"] % dict(name=figure_id))
+
+    file_content = file.file.read(MaxFileSize + 1)
+    if len(file_content) > MaxFileSize:
+        raise HTTPException(status_code=400, detail=locale["exceptions"]["image_too_large"])
+
+    random_filename = str(uuid.uuid4())
+    upload_path = pathlib.Path("figures") / f"{random_filename}.{file.content_type.split('/')[-1]}"
+    if upload_path.exists():
+        raise HTTPException(status_code=409, detail=locale["exceptions"]["error_while_randomname"])
+
+    upload_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(upload_path, "wb") as f:
+        f.write(file_content)
+
+    with images.operation():
+        images.images[figure_id] = {"filename": str(upload_path)}
+    return {"success": True}
+
+
+@sheets_app.get("/figure/{figure_id}", response_class=FileResponse)
+async def read_figure(figure_id: str):
+    if figure_id not in images.images:
+        raise HTTPException(status_code=404)
+
+    image = images.images[figure_id]
+    return image["filename"]
+
+
+@sheets_app.get("/figures", dependencies=[Depends(RequireScope("sheets_edit"))])
+async def list_figures():
+    return list(deatomize(images.images).keys())
+
+
+@sheets_app.get("/imgeditor", response_class=HTMLResponse)
+async def image_editor(request: Request, user: User = Depends(RequireScope("sheets_edit"))):
+    data = await make_template_data(request, user)
+    return templates.TemplateResponse("modules/image_editor.html", data)
 
 
 # Used to broadcast the currently edited file to prevent multiple users from editing the same file

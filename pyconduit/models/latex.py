@@ -12,7 +12,13 @@ class LatexObject(BaseModel, abc.ABC):
 
     @classmethod
     def parse_obj(cls, data: dict):
-        object_types = {"text": LatexText, "problem": LatexProblem, "inc": LatexInclude, "tikz": TikzObject}
+        object_types = {
+            "text": LatexText,
+            "problem": LatexProblem,
+            "inc": LatexInclude,
+            "tikz": TikzObject,
+            "image": ImageObject,
+        }
         if data["cls"] not in object_types:
             raise ValueError(f"Invalid object type: {data['cls']}")
 
@@ -44,6 +50,14 @@ class TikzObject(LatexText):
 
     def make_string(self, allow_recursion: bool = True) -> str:
         return ""
+
+
+class ImageObject(LatexObject):
+    cls = "image"
+    filename: str
+
+    def make_string(self, allow_recursion: bool = True) -> str:
+        return f"<img src='/sheets/figure/{self.filename}' class='sheet_image' />"
 
 
 class LatexProblem(LatexObject):

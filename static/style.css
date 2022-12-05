@@ -154,3 +154,15 @@ span.problem.problem-real.problem-solved::before {
     font-size: 160%;
     background-color: lightgoldenrodyellow;
 }
+
+.image-preview {
+    width: 300px;
+    height: 300px;
+    border: 1px solid gray;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.sheet_image {
+    max-height: 230px;
+}

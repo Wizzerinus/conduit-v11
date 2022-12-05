@@ -15,6 +15,7 @@ markdown-it-py = "*"
 mdit-py-plugins = "*"
 asteval = "*"
 coloraide = "*"
+linkify-it-py = "*"
 
 [dev-packages]
 black = "*"

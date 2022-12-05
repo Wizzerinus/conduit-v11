@@ -1,0 +1,107 @@
+{% extends "template.html" %}
+{% set title = "index" %}
+{% block main %}
+    <h2>{{ locale.titles.image_editor }}</h2>
+
+    <div id="image_editor">
+        {% include "parts/vue-alert.html" %}
+
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xxl-4">
+            <div class="col">
+                <div class="card mb-3" v-for="image in images">
+                    <div class="card-header position-relative">
+                        <code>[[ image ]]</code>
+                    </div>
+                    <img :src="'/sheets/figure/' + image" class="card-img-bottom" :alt="image" />
+                </div>
+            </div>
+        </div>
+
+        <div id="upload-modal" class="modal fade" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{ locale.pages.image_editor.upload_modal }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col">
+                                <input class="form-control" type="text" v-model="filename" placeholder="Enter the filename" />
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col">
+                                <input class="form-control" type="file" id="image_file" @change="updateImage" accept="image/jpeg, image/png" />
+                            </div>
+                        </div>
+                        <div :style="{backgroundImage: 'url(' + image + ')'}" class="mt-3 image-preview"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ locale.common.btn_close }}</button>
+                        <button type="button" class="btn btn-primary" @click="upload">{{ locale.common.btn_save }}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#upload-modal">
+        {{ locale.pages.image_editor.upload_modal }}
+    </button>
+
+    <script>
+    const app = {
+        data() {
+            return {
+                alert: new AlertModule(),
+                images: [],
+                image: "",
+                filename: "",
+            }
+        },
+        methods: {
+            async loadFigures() {
+                try {
+                    const response = await axios.get("/sheets/figures")
+                    this.images = response.data
+                } catch (error) {
+                    this.alert.logError("Error while loading figures", error)
+                }
+            },
+            getFile() {
+                return document.querySelector("#image_file").files[0]
+            },
+            updateImage() {
+                const reader = new FileReader()
+                reader.addEventListener("load", () => {
+                    this.image = reader.result
+                })
+                reader.readAsDataURL(this.getFile())
+            },
+            async upload() {
+                const filename = this.filename.split("/").pop()
+                const formData = new FormData()
+                formData.append("file", this.getFile())
+                try {
+                    await axios.post(`/sheets/figure/${filename}`, formData, {
+                        headers: {
+                            "Content-Type": "multipart/form-data",
+                        },
+                    })
+                    await this.loadFigures()
+                } catch (error) {
+                    this.alert.logError("Error while uploading image", error)
+                }
+            }
+        },
+        async created() {
+            await this.loadFigures()
+        }
+    }
+
+    const vue = Vue.createApp(app)
+    vue.config.compilerOptions.delimiters = ["[[", "]]"]
+    vue.mount("#image_editor")
+    </script>
+{% endblock %}

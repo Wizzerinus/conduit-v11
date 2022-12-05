@@ -8,20 +8,25 @@ from TexSoup.utils import Token
 from pyconduit.models.latex import LatexDocument, LatexObject
 from pyconduit.shared.helpers import get_config
 from pyconduit.shared.latex.core import (
+    CaptionMacro,
     ErrorCommand,
     GlobalConfig,
+    IncludeGraphics,
     ItemExtractor,
+    LabelMacro,
     MetadataNode,
     ProblemMacro,
+    RefMacro,
     TextCommand,
     TextEnv,
+    WrapfigureEnv,
     convert_latex,
 )
 from pyconduit.shared.latex.markdown_centerline import centerline_plugin
 
 cfg = get_config("latex")
 locale = get_config("localization")
-md_generator = MarkdownIt()
+md_generator = MarkdownIt("gfm-like")
 md_generator.use(anchors_plugin, max_level=3, permalink=True)
 md_generator.use(centerline_plugin)
 
@@ -39,6 +44,7 @@ Replacements = {
     "~": " ",
 }
 
+text_regex = re.compile(r"\\text\{(.+?)\}")
 comment_regex = re.compile(r"(^|[^\\])%.*?\n", re.M)
 
 # These are applied during the latex compilation
@@ -52,9 +58,10 @@ BuiltinCommands = {
     "LARGE": TextCommand("## #1", 1),
     "Large": TextCommand("### #1", 1),
     "large": TextCommand("### #1", 1),
-    "textit": TextCommand("*#1*", 1, trim_contents=True),
-    "textbf": TextCommand("**#1**", 1, trim_contents=True),
-    "texttt": TextCommand("`#1`", 1, trim_contents=True),
+    "textit": TextCommand("*#1*", 1, trim_contents=True, empty_contents=""),
+    "textbf": TextCommand("**#1**", 1, trim_contents=True, empty_contents=""),
+    "texttt": TextCommand("`#1`", 1, trim_contents=True, empty_contents=""),
+    "sout": TextCommand("~~#1~~", 1, trim_contents=True, empty_contents=""),
     "ldots": TextCommand("...", 0),
     # problem macros
     "z": ProblemMacro(problem=1, letter=0, fmt="%(z)i%(ext)s.", cfmt="%(z)i", standalone=True),
@@ -78,11 +85,13 @@ BuiltinCommands = {
     "sheetname": GlobalConfig("sheet_name"),
     "cdtexport": GlobalConfig("conduit-strategy"),
     # environments
-    "center": TextEnv("-> #1 <-", 1),
+    "center": TextEnv("-> #1 <-"),
     "centerline": TextCommand("-> #1 <-", 1),
-    "tikzpicture": TextEnv("#1", 1, "tikz"),
+    "tikzpicture": TextEnv("#1", "tikz"),
+    "wrapfigure": WrapfigureEnv(),
     "itemize": ItemExtractor("* %(item)s"),
     # miscellanous
+    "bigskip": TextCommand("", 0),
     "medskip": TextCommand("\n\n", 0),
     "vspace": TextCommand("", 1),
     "vspace*": TextCommand("", 1),
@@ -91,8 +100,14 @@ BuiltinCommands = {
     "noindent": TextCommand("", 0),
     "newpage": TextCommand("", 0),
     "qquad": TextCommand("    ", 0),
+    "mbox": TextCommand("\\text{{#1}}", 1),
+    "fbox": TextCommand("\\text{{#1}}", 1),
+    # complex commands
+    "label": LabelMacro(),
+    "ref": RefMacro(),
+    "includegraphics": IncludeGraphics(),
+    "caption": CaptionMacro(),
 }
-# TODO: wrapfigure
 
 
 def collect_excess(doc: LatexDocument, current_metadata: MetadataNode) -> None:
@@ -102,7 +117,7 @@ def collect_excess(doc: LatexDocument, current_metadata: MetadataNode) -> None:
             doc.objects.append(LatexObject.parse_obj(new_node))
             current_metadata = MetadataNode("text")
             if excess_text:
-                current_metadata.collect(excess_text)
+                new_node, _ = current_metadata.collect(excess_text)
         else:
             break
     else:
@@ -132,7 +147,10 @@ def build_latex(latext: str) -> LatexDocument:
     for node in soup.contents:
         is_math = isinstance(node, TexNode) and node.name[0] == "$"
         if isinstance(node, str) or isinstance(node, Token) or is_math:
-            new_node, excess_text = current_metadata.collect(str(node))
+            node = str(node)
+            if not is_math:
+                node = text_regex.sub("\\1", node)
+            new_node, excess_text = current_metadata.collect(node)
             if new_node:
                 # excess_text is guaranteed None because the current mode does not collect text
                 doc.objects.append(LatexObject.parse_obj(new_node))
@@ -140,7 +158,7 @@ def build_latex(latext: str) -> LatexDocument:
         elif isinstance(node, MetadataNode):
             collect_excess(doc, current_metadata)
             current_metadata = node
-        elif isinstance(node, TexNode) and node.contents == [""]:
+        elif (isinstance(node, TexNode) and node.contents == [""]) or node is None:
             pass
         else:
             raise ValueError(locale["exceptions"]["unknown_node"] % dict(node=node, type=type(node)))

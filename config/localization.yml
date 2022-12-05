@@ -8,6 +8,7 @@ titles:
   bulk_create_users_modal: Создание пользователей
   change_settings_modal: Изменение настроек
   formula_editor_modal: Редактор формул
+  image_editor: Картинки
 navbar:
   index: Главная
   sheet_editor: Редактор листков
@@ -15,6 +16,7 @@ navbar:
   conduit_editor: Редактор плюсника
   admin: Администрация
   logout: Выйти
+  image_editor: Картинки
 scopes:
   admin: Администрация сайта
   sheets_edit: Редактирование TeX файлов
@@ -48,7 +50,10 @@ exceptions:
   stacking_limit: Превышен лимит пост-командного спуска!
   unknown_node: Неизвестный блок на верхнем уровне - %(node)s (тип %(type)s)!
   invalid_argcount: Некорректное количество аргументов к команде %(name)s! Ожидалось %(expected)d, получено %(actual)d.
-  invalid_env_argcount: Некорректное количество аргументов к окружению %(name)d! Ожидалось 0, получено %(actual)d.
+  invalid_label_argcount: Некорректное количество аргументов к команде \label!
+  invalid_graphics_argcount: Некорректное количество аргументов к команде \includegraphics!
+  invalid_graphics_filename: Некорректное имя файла в команде \includegraphics '%(filename)s'!
+  label_no_problem: Не удалось найти задачу при создании метки '%(label)s'!
   itemextract_error: Блоки \itemize и \enumerate должны начинаться с \item, а не с %(name)s!
   command_banned: Команда '%(name)s' запрещена! Используйте '%(instead)s' вместо нее.
   malformed_newcommand: Некорректное определение команды! Получено '%(actual)s'.
@@ -57,6 +62,11 @@ exceptions:
   need_force_regen: Используется force стратегия перестройки кондуитов, но кондуит уже есть. Добавьте в документ '__FORCE_REGEN__'.
   passwords_mismatch: Пароли не совпадают!
   no_conduit_for_user: У пользователя нет кондуита!
+  invalid_image_type: Некорректный тип изображения! Ожидалось png или jpg, получено '%(actual)s'.
+  image_too_large: Превышен максимальный размер изображения!
+  image_already_exists: Изображение '%(name)s' уже существует!
+  error_while_randomname: Не удалось сгенерировать название файла! Попробуйте сохранить файл заново.
+  regen_limit: Превышен предел на генерацию ссылок!
 
 common:
   last_sheets: Последние листочки
@@ -116,3 +126,5 @@ pages:
     successfully_saved: Кондуит сохранён!
     error_while_saving: Произошла ошибка при сохранении кондуита
     formulas: Формулы
+  image_editor:
+    upload_modal: Загрузка файлов

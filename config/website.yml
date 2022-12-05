@@ -13,6 +13,9 @@ navbar:
   conduit_editor:
     url: /conduit/editor
     scope: conduit_edit
+  image_editor:
+    url: /sheets/imgeditor
+    scope: sheets_edit
 
   admin:
     url: /admin/
