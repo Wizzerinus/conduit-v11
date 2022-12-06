@@ -308,7 +308,7 @@ class IncludeGraphics(LatexCommand):
         if len(args) < 1:
             raise ValueError(locale["exceptions"]["invalid_graphics_argcount"])
 
-        filename = args[-1].split("/")[-1]
+        filename = args[-1].split("/")[-1].split(".")[0]
         if filename not in image_datastore.images:
             raise ValueError(locale["exceptions"]["invalid_graphics_filename"] % dict(filename=filename))
 

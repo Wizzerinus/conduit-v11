@@ -7,12 +7,12 @@
         {% include "parts/vue-alert.html" %}
 
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xxl-4">
-            <div class="col">
-                <div class="card mb-3" v-for="image in images">
+            <div class="col" v-for="image in images">
+                <div class="card mb-3">
                     <div class="card-header position-relative">
                         <code>[[ image ]]</code>
                     </div>
-                    <img :src="'/sheets/figure/' + image" class="card-img-bottom" :alt="image" />
+                    <img :src="'/sheets/figure/' + image" class="card-img-bottom image-editor-card-bottom" :alt="image" />
                 </div>
             </div>
         </div>
@@ -76,11 +76,12 @@
                 const reader = new FileReader()
                 reader.addEventListener("load", () => {
                     this.image = reader.result
+                    this.filename = this.getFile().name
                 })
                 reader.readAsDataURL(this.getFile())
             },
             async upload() {
-                const filename = this.filename.split("/").pop()
+                const filename = this.filename.split("/").pop().split(".").shift()
                 const formData = new FormData()
                 formData.append("file", this.getFile())
                 try {
