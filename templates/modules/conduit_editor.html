@@ -151,6 +151,9 @@
                             row_obj[i] = data.real_rows[user][j++]
                     }
                 }
+
+                this.current_sheet.conduit.row_styles = data.row_styles
+                this.current_sheet.conduit.column_styles = data.column_styles
             },
 
             isDisabled(sheet) {
@@ -293,6 +296,11 @@
                     const formulas = await axios.get("/conduit/formulas")
                     editor.setText(formulas.data)
                     this.unsaved_changes = false
+
+                    const old_sheet_id = this.current_sheet ? this.current_sheet.id : ""
+                    if (old_sheet_id) {
+                        wss.send({action: "Close", id: old_sheet_id})
+                    }
                     wss.send({action: "Open", method: "sheet", id: "__formulas"})
                 } catch(e) {
                     this.alert.logError("Unable to load formulas", e)
