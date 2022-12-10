@@ -16,6 +16,8 @@ Position = int | None
 ConduitCallback = Callable[[Position, str | int, str, list[str]], str]
 # (row id, column caption text, cell value) -> style
 FormatterCallback = Callable[[str, str, str], None | str]
+# (row id or column caption text) -> style
+BorderFormatterCallback = Callable[[str], None | str]
 Range = tuple[str, str]
 ColorTuple = tuple[int, int, int]
 T = TypeVar("T")
@@ -99,6 +101,18 @@ class FormulaProvider:
                 style = callback(user, problem, value)
                 if style is not None:
                     self.doc.styles.setdefault(user, {})[problem] = style
+
+    def add_row_formatter(self, callback: BorderFormatterCallback):
+        for user in self.doc.conduit.content:
+            style = callback(user)
+            if style is not None:
+                self.doc.row_styles[user] = style
+
+    def add_column_formatter(self, callback: BorderFormatterCallback):
+        for problem in self.doc.conduit.problem_names:
+            style = callback(problem)
+            if style is not None:
+                self.doc.column_styles[problem] = style
 
     def add_gradient_formatter(
         self,

@@ -10,12 +10,13 @@
                     <thead>
                         <tr>
                             <th>[[ current_sheet.id ]] [[ current_sheet.name.slice(0, 13) ]]</th>
-                            <th v-for="problem in current_sheet.conduit.problem_names" v-html="problem"></th>
+                            <th v-for="problem in current_sheet.conduit.problem_names" v-html="problem"
+                                :style="getColumnStyle(problem)"></th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="user in current_sheet.users">
-                            <td>[[ user.name ]]</td>
+                            <td :style="getRowStyle(user.login)">[[ user.name ]]</td>
                             <td v-for="(value, index) in current_sheet.conduit.content[user.login]"
                                 :class="{
                                     'conduit-unsaved-cell': isCellUnsaved(user.login, index),
@@ -203,6 +204,18 @@
                     return null
                 return value
             },
+            getRowStyle(login) {
+                const value = this.current_sheet.row_styles[login]
+                if (!value)
+                    return null
+                return value
+            },
+            getColumnStyle(problem) {
+                const value = this.current_sheet.column_styles[problem]
+                if (!value)
+                    return null
+                return value
+            },
             fillCell(user, index) {
                 if (!this.isCellEditable(user.login, index))
                     return
@@ -250,6 +263,7 @@
                 try {
                     const response = await axios.get(`/conduit/content/${sheet.id}`)
                     this.current_sheet = response.data
+                    console.log(this.current_sheet)
                     this.unreal_indices = {}
                     for (let i = 0; i < this.current_sheet.real_indices.length; i++) {
                         const index = this.current_sheet.real_indices[i]

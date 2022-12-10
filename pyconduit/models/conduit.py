@@ -39,3 +39,5 @@ class ConduitContent(BaseModel):
     real_indices: list[int] = []  # old index for problems, -1 for virtual columns like "sum"
     limited_columns: list[str] = []
     limited_rows: list[str] = []
+    column_styles: dict[str, str] = {}
+    row_styles: dict[str, str] = {}

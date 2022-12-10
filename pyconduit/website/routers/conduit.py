@@ -112,6 +112,8 @@ async def save_file(file_id: str, unsaved_changes: dict = Body(..., embed=True))
                 "file_id": file_id,
                 "changes": unsaved_changes,
                 "styles": conduit_doc.styles,
+                "row_styles": conduit_doc.row_styles,
+                "column_styles": conduit_doc.column_styles,
                 "virtual_rows": virtual_rows,
                 "real_rows": real_rows,
             }
