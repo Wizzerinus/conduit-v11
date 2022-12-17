@@ -13,7 +13,6 @@ first_problem_character = cfg["iterators"]["first-letter"]
 problem_skips = cfg["iterators"]["letter-skips"]
 problem_skip_indices = [ord(c) - ord(first_problem_character) for c in problem_skips]
 priority_cap = 10000
-Punctuation = ".,;:!?()[]{}"
 image_datastore = datastore_manager.get("images")
 
 
@@ -28,8 +27,10 @@ class MetadataNode:
             self.kwargs["text"] = ""
 
         if self.collect_text and text is not None:
-            if text and text[0] not in Punctuation:
-                self.kwargs["text"] += " "
+            if (text.startswith("$") and self.kwargs["text"] and self.kwargs["text"][-1] not in ".?!(") or (
+                self.kwargs["text"].endswith("$") and text and text[0] not in ",.-?!"
+            ):
+                self.kwargs["text"] = self.kwargs["text"].rstrip() + " "
             self.kwargs["text"] += text.strip()
         elif not self.collect_text or self.kwargs["text"].strip():
             excess_text = ""
@@ -37,6 +38,7 @@ class MetadataNode:
                 # self.kwargs["text"] = self.kwargs["text"].strip()
                 if "\n\n" in self.kwargs["text"]:
                     self.kwargs["text"], excess_text = self.kwargs["text"].split("\n\n", 1)
+                    self.kwargs["text"] = self.kwargs["text"].rstrip()
                     # excess_text = excess_text.strip("\n\r\t")
             return self.kwargs, excess_text
 
