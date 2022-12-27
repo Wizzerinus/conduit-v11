@@ -87,9 +87,6 @@ async def change_password(user: User = Depends(require_login), password: ChangeP
 
 @login_app.post("/conduit-settings")
 async def conduit_settings(user: User = Depends(require_login), settings: ConduitSettingsRequest = Body(...)):
-    if not user.privileges.conduit_generation:
-        raise HTTPException(status_code=400, detail=locale["exceptions"]["no_conduit_for_user"])
-
     password_hash = hash_password(settings.current_password, user.salt)
     if not hmac.compare_digest(password_hash, user.password):
         raise HTTPException(status_code=401, detail=locale["exceptions"]["invalid_credentials"])
@@ -97,7 +94,10 @@ async def conduit_settings(user: User = Depends(require_login), settings: Condui
     with datastore.operation():
         accounts = datastore.accounts
         user_acc = accounts.get(user.login, {})
-        user_acc.allow_conduit_view = settings.allow_conduit_view
+        if user.privileges.conduit_generation and settings.allow_conduit_view is not None:
+            user_acc.allow_conduit_view = settings.allow_conduit_view
+        if user.privileges.conduit_edit and settings.conduit_autosave is not None:
+            user_acc.conduit_autosave = settings.conduit_autosave
     return {"message": locale["pages"]["index"]["conduit_settings_changed"]}
 
 

@@ -79,6 +79,21 @@
                         </div>
                     </div>
                     {% endif %}
+                    {% if user.privileges.conduit_edit %}
+                    <div class="row mt-2 mb-4">
+                        <div class="col">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="conduit-autosave" v-model="conduit_autosave" />
+                                <label class="form-check-label" for="conduit-autosave">{{ locale.pages.index.conduit_autosave }}</label>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn btn-primary" type="button" @click="saveConduitSettings">
+                                {{ locale.common.btn_save }}
+                            </button>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ locale.common.btn_close }}</button>
@@ -94,6 +109,7 @@
                 alert: new AlertModule(),
                 current_password: "",
                 allow_conduit_view: {{ "true" if user.allow_conduit_view else "false" }},
+                conduit_autosave: {{ "true" if user.conduit_autosave else "false" }},
                 new_password: "",
                 confirm_password: "",
             }
@@ -104,6 +120,7 @@
                     const response = await axios.post("/login/conduit-settings", {
                         current_password: this.current_password,
                         allow_conduit_view: this.allow_conduit_view,
+                        conduit_autosave: this.conduit_autosave,
                     })
                     this.alert.set(response.data.message, "success")
                 } catch(e) {

@@ -53,7 +53,9 @@
                 </div>
 
                 <div class="btn-group me-2">
+                    {% if not user.conduit_autosave %}
                     <button class="btn btn-success" @click="saveConduit">{{ locale.common.btn_save }}</button>
+                    {% endif %}
                     {% if user.privileges.formula_edit %}
                     <button class="btn btn-secondary" @click="loadFormulas" data-bs-toggle="modal"
                             data-bs-target="#modal-formula-editor" :disabled="isDisabled('__formulas')">
@@ -108,6 +110,7 @@
                 teacher_setting: username,
                 value_setting: 1,
                 handle: -1,
+                conduit_autosave: {{ "true" if user.conduit_autosave else "false" }},
             }
         },
         methods: {
@@ -230,6 +233,9 @@
                 this.current_sheet.conduit.content[user.login][index] = value
                 this.unsaved_commits[user.login][this.current_sheet.real_indices[index]] = value
                 this.have_unsaved_commits = true
+                if (this.conduit_autosave) {
+                    this.saveConduit().then(() => {})
+                }
             },
             isCellEditable(login, index) {
                 return login[0] !== '_' && this.current_sheet.real_indices[index] !== -1

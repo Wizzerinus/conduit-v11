@@ -26,6 +26,7 @@ class User(BaseModel):
     virtual: bool = False
 
     allow_conduit_view: bool = True
+    conduit_autosave: bool = False
 
 
 class UserSensitive(BaseModel):
@@ -62,4 +63,5 @@ class ChangePasswordRequest(AuthorizedRequest):
 
 
 class ConduitSettingsRequest(AuthorizedRequest):
-    allow_conduit_view: bool
+    allow_conduit_view: bool = None
+    conduit_autosave: bool = None
