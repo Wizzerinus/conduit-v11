@@ -5,13 +5,14 @@ from pydantic import ValidationError
 from starlette.requests import Request
 from starlette.responses import HTMLResponse
 
-from pyconduit.models.bundle import BundleDocument
+from pyconduit.models.bundle import Aggregator, BundleDocument
 from pyconduit.models.conduit import Conduit, ConduitContent
 from pyconduit.models.user import User
+from pyconduit.shared.aggregation import build_aggregator
 from pyconduit.shared.conduit_postprocessing import calculate_with_formula, get_all_users
 from pyconduit.shared.datastore import datastore_manager, deatomize
 from pyconduit.shared.helpers import get_config
-from pyconduit.website.decorators import RequireScope, make_template_data, templates
+from pyconduit.website.decorators import RequireScope, get_current_user, make_template_data, templates
 from pyconduit.website.routers.sheets import socket_manager
 
 conduit_app = FastAPI()
@@ -122,3 +123,33 @@ async def save_file(file_id: str, unsaved_changes: dict = Body(..., embed=True))
         with datastore.operation():
             datastore.sheets[file_id].precomputed = conduit_doc.dict()
     return {"success": True}
+
+
+@conduit_app.get("/aggregator", response_class=HTMLResponse)
+async def aggregator_ui(request: Request, user: User = Depends(get_current_user)):
+    data = await make_template_data(request, user)
+    return templates.TemplateResponse("modules/aggregator_ui.html", data)
+
+
+@conduit_app.get("/aggregator/list")
+async def get_aggregator(user: User | None = Depends(get_current_user)):
+    all_items = {key: Aggregator.parse_obj(deatomize(value)) for key, value in datastore.aggregators.items()}
+    if not user or not user.privileges.conduit_edit:
+        all_items = {key: value for key, value in all_items.items() if value.public}
+    return all_items
+
+
+@conduit_app.get("/aggregator/single/{filter_id}")
+async def get_filter(filter_id: str, user: User | None = Depends(get_current_user)):
+    if filter_id not in datastore.aggregators:
+        raise HTTPException(status_code=404, detail=f"Filter {filter_id} not found!")
+    filter_data = Aggregator.parse_obj(deatomize(datastore.aggregators[filter_id]))
+    all_conduits = {key: BundleDocument.parse_obj(deatomize(value)) for key, value in datastore.sheets.items()}
+    all_precomputed = {key: value.precomputed for key, value in all_conduits.items()}
+    if not user or not user.privileges.conduit_edit:
+        allow_login = user.login if user else None
+        for precomputed in all_precomputed.values():
+            cdt = precomputed.conduit
+            cdt.content = {key: val for key, val in cdt.content.items() if key.startswith("_") or key == allow_login}
+
+    return build_aggregator(filter_data, all_precomputed)

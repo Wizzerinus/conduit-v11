@@ -18,3 +18,12 @@ class BundleDocument(BaseModel):
             data = dict(data)
             data["latex"] = LatexDocument.parse_obj(data["latex"])
         return cast(BundleDocument, super().parse_obj(data))
+
+
+class Aggregator(BaseModel):
+    name: str
+    extra_columns: list[str] = []
+    extra_rows: list[str] = []
+    show_columns: bool = False
+    show_rows: bool = True
+    public: bool = False

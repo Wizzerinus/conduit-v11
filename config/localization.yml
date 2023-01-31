@@ -9,6 +9,8 @@ titles:
   change_settings_modal: Изменение настроек
   formula_editor_modal: Редактор формул
   image_editor: Картинки
+  aggregator_ui: Агрегатор таблиц
+  create_filter_modal: Создание фильтров
 navbar:
   index: Главная
   sheet_editor: Редактор листков
@@ -129,3 +131,5 @@ pages:
     formulas: Формулы
   image_editor:
     upload_modal: Загрузка файлов
+  aggregator_ui:
+    create_filter: Создать фильтр

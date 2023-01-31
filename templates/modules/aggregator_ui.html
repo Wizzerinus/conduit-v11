@@ -1,0 +1,143 @@
+{% extends "template.html" %}
+{% set title = "aggregator_ui" %}
+{% block main %}
+    <h2>{{ locale.titles.aggregator_ui }}</h2>
+
+    <div id="aggregator-app">
+        <div v-if="current_filter" class="mb-4">
+            <div class="table-responsive height-conduit-editor">
+                <table class="table table-freezer table-conduit table-hover table-chover">
+                    <thead>
+                        <tr>
+                            <th>{{ locale.titles.aggregator_ui }}</th>
+                            <th v-for="problem in current_filter.column_names" v-html="problem"
+                                :style="getColumnStyle(problem)"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="user in current_filter.row_names">
+                            <td :style="getRowStyle(user.login)">[[ user.name ]]</td>
+                            <td v-for="(value, index) in current_filter.conduit.content[user.login]"
+                                :style="getStyle(user.login, index)" :title="getCellTitle(value)">
+                                [[ getCellValue(value) ]]
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="position-absolute bottom-0 start-0 mb-4 ms-4">
+            <div class="mb-3">
+                <div class="btn-group me-2 overflow-auto text-nowrap" style="max-width: 90vw">
+                    <button v-for="filter in filter_list" type="button" :class="getFilterClass(filter)"
+                            class="btn" @click="openFilter(filter)">
+                        [[ filter.name ]]
+                    </button>
+                </div>
+            </div>
+
+            {% if user.privileges.conduit_edit %}
+            <div class="btn-toolbar">
+                <div class="btn-group me-2">
+                    <button class="btn btn-secondary" data-bs-toggle="modal"
+                            data-bs-target="#modal-create-filter">
+                        {{ locale.pages.aggregator_ui.create_filter }}
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if user.privileges.conduit_edit %}
+        <div id="modal-create-filter" class="modal fade" tabindex="-1">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{ locale.titles.create_filter_modal }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        Создание фильтров здесь
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% include "parts/vue-alert.html" %}
+    </div>
+
+    <script>
+    const app = {
+        data() {
+            return {
+                alert: new AlertModule(),
+                current_filter: null,
+                filter_list: [],
+            }
+        },
+        methods: {
+            getCellValue(val) {
+                val = val.split(";", 1)[0]
+                return val === "0" ? "" : val
+            },
+            getCellTitle(val) {
+                const parts = val.split(";")
+                if (parts.length <= 1)
+                    return null
+                let value = `{{ locale.pages.conduit.submit_date }}${parts[1]}\n` +
+                            `{{ locale.pages.conduit.teacher }}${parts[2]}`
+                if (parts[3] && parts[3] !== parts[2])
+                    value += `\n{{ locale.pages.conduit.editor }}${parts[3]}`
+                return value
+            },
+            getStyle(login, index) {
+                const problem = this.current_filter.conduit.problem_names[index]
+                if (!this.current_filter.styles[login])
+                    return null
+                const value = this.current_filter.styles[login][problem]
+                if (!value)
+                    return null
+                return value
+            },
+            getRowStyle(login) {
+                const value = this.current_filter.row_styles[login]
+                if (!value)
+                    return null
+                return value
+            },
+            getColumnStyle(problem) {
+                const value = this.current_filter.column_styles[problem]
+                if (!value)
+                    return null
+                return value
+            },
+
+            async openFilter(filter) {
+                this.alert.clear()
+                try {
+                    const response = await axios.get(`/conduit/aggregator/single/${filter}`)
+                    this.current_filter = response.data
+                } catch (e1) {
+                    this.alert.logError(`Error while opening sheet ${sheet.id}`, e1)
+                }
+            },
+            getFilterClass(filter) {
+                if (filter.public) {
+                    return "btn-outline-primary"
+                }
+                return "btn-outline-warning"
+            }
+        },
+        async created() {
+            const response = await axios.get("/conduit/aggregator/data")
+            this.filter_list = response.data
+        }
+    }
+
+    const vue = Vue.createApp(app)
+    vue.config.compilerOptions.delimiters = ["[[", "]]"]
+    vue.mount("#aggregator-app")
+    </script>
+{% endblock %}
