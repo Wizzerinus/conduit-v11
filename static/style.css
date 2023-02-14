@@ -102,9 +102,9 @@
 .table-conduit td:not(:first-child), .table-conduit th:not(:first-child), .conduit-cell.conduit-cell.conduit-cell {
     width: 47px;
     min-width: 47px;
-    max-width: 47px;
     text-align: center;
     padding: 2px 2px 10px 2px;
+    white-space: nowrap;
 }
 
 .table-conduit-limited td {

@@ -125,6 +125,7 @@
             },
             ws_onClose(data) {
                 const {id, sheet_id} = data
+                if (!this.other_users[sheet_id]) return
                 delete this.other_users[sheet_id].users[id]
                 if (Object.keys(this.other_users[sheet_id].users).length === 0)
                     delete this.other_users[sheet_id]
@@ -158,6 +159,7 @@
                 this.current_sheet.conduit.row_styles = data.row_styles
                 this.current_sheet.conduit.column_styles = data.column_styles
             },
+            ws_onNewSheet() {},
 
             isDisabled(sheet) {
                 return this.other_users[sheet] !== undefined && this.other_users[sheet].method === "sheet" &&

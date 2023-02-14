@@ -99,7 +99,7 @@ class RequireScope:
         return user
 
 
-def create_access_token(data: dict, expire: timedelta = timedelta(hours=168)) -> str:
+def create_access_token(data: dict, expire: timedelta = timedelta(hours=192)) -> str:
     to_encode = data.copy()
     expire_time = datetime.utcnow() + expire
     to_encode.update({"exp": expire_time})

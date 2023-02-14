@@ -74,6 +74,7 @@
                         delete this.other_users[sheet_id]
                 },
                 ws_onConduitUpdate() {},
+                ws_onNewSheet() {},
 
                 isDisabled(sheet) {
                     return this.other_users[sheet.id] !== undefined && !this.other_users[sheet.id].users[this.handle]
