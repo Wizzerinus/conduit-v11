@@ -6,7 +6,7 @@
             <div class="col-3 list-group overflow-auto height-sheet-viewer">
                 <button v-for="(sheet, index) in sheet_list" type="button" class="list-group-item list-group-item-action"
                         :class="getColor(sheet, index)" @click="openSheet(sheet)">
-                    [[ sheet.name ]]
+                    [[ sheet.id ]] [[ sheet.name ]]
                 </button>
             </div>
             <div class="col-9">

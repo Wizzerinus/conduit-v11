@@ -20,7 +20,7 @@
                     <span v-for="(sheet, index) in sheet_list" :title="getTitle(sheet)">
                         <button type="button" class="list-group-item list-group-item-action"
                                 :disabled="isDisabled(sheet)" :class="getColor(sheet, index)" @click="openSheet(sheet)">
-                            [[ sheet.name ]]
+                            [[ sheet.id ]] [[ sheet.name ]]
                         </button>
                     </span>
                 </div>
