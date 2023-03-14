@@ -170,5 +170,5 @@ def build_latex(latext: str) -> LatexDocument:
 
 
 def generate_html(doc: LatexDocument) -> str:
-    md = doc.generate_markdown().replace("-> ###", "### ->")
+    md = doc.generate_markdown().replace("-> ###", "### ->").replace("\\{", "\\\\{").replace("\\}", "\\\\}")
     return md_generator.render(md)
