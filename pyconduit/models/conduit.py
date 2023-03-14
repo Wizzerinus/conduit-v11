@@ -11,13 +11,14 @@ Note that if the conduit has to be rebuilt and the author cannot edit them, a wa
 * 'force' - ask the person saving the latex file for confirmation or to change the strategy.
   Wipes all conduit data in the process, so not recommended to be used after the sheet is publicly available.
   Note that we cannot change the strategy on the file source because the commands require having a syntax tree already.
-* 'cache-soft' - attempt to use the cached problem texts. If a problem is not found, do not generate conduit.
+* 'wipe-cache' - check that the sizes of problem array and the problem text cache are equal, 
+  and if so, regenerate the cache.
 * 'cache-optimal' - attempt to use the cached problem texts. If a problem is not found, but all cached problems are in
   the latex file, reorder in the conduit. If a problem also went missing, do not generate conduit and emit a warning.
 * 'cache-strong' - same with cache-optimal, but if an unknown problem is between two known ones, update its text
   in the cache first. This can apply to any number of problems.
 
-We currently have 'none', 'once', 'force' and 'cache-optimal' implemented. Eventually we might do more.
+We currently have 'none', 'once', 'force', 'wipe-cache' and 'cache-optimal' implemented. Eventually we might do more.
 while cache-strong sounds good in theory, it is hard to write and causes data loss in certain scenarios.
 """
 

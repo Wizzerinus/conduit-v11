@@ -114,6 +114,7 @@ pages:
     btn_add_sheet: Создать листок
     btn_remove_sheet: Удалить листок
     missing_cache_strategy: "Следующие задачи пропали из листка: %s. Кондуит не был сгенерирован."
+    wipe_cache_fail: "Не удалось перегенерировать названия задач: было %d, стало %d."
 
   sheet_viewer:
     mode_sheet: Листочек

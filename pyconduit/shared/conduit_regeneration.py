@@ -35,6 +35,15 @@ def regen_force(bundle: BundleDocument, ctx: LatexRequest) -> tuple[bool, str]:
     return True, ""
 
 
+def wipe_problem_cache(bundle: BundleDocument, ctx: LatexRequest) -> tuple[bool, str]:
+    problems = [prob for prob in bundle.latex.objects if isinstance(prob, LatexProblem) and prob.conduit_include]
+    if (len1 := len(bundle.conduit.problem_text_cache)) != (len2 := len(problems)):
+        return False, (locale["pages"]["sheet_editor"]["wipe_cache_fail"] % (len1, len2))
+
+    bundle.conduit.problem_text_cache = [prob.text for prob in problems]
+    return True, ""
+
+
 def regen_cache_mid(bundle: BundleDocument, ctx: LatexRequest) -> tuple[bool, str]:
     if bundle.conduit is None:
         problems = [prob for prob in bundle.latex.objects if isinstance(prob, LatexProblem)]
@@ -79,4 +88,5 @@ regen_strategies = {
     "once": regen_once,
     "force": regen_force,
     "cache-optimal": regen_cache_mid,
+    "wipe-cache": wipe_problem_cache,
 }
