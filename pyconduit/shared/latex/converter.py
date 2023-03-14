@@ -10,6 +10,7 @@ from pyconduit.shared.helpers import get_config
 from pyconduit.shared.latex.core import (
     CaptionMacro,
     ErrorCommand,
+    FootnoteMacro,
     GlobalConfig,
     IncludeGraphics,
     ItemExtractor,
@@ -110,6 +111,7 @@ BuiltinCommands = {
     "ref": RefMacro(),
     "includegraphics": IncludeGraphics(),
     "caption": CaptionMacro(),
+    "footnote": FootnoteMacro(),
 }
 
 

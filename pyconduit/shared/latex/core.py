@@ -334,6 +334,28 @@ class CaptionMacro(LatexCommand):
         return -3
 
 
+class FootnoteMacro(LatexCommand):
+    def apply(self, context: dict, node: TexNode, *args: str):
+        if len(args) != 1:
+            raise ValueError(
+                locale["exceptions"]["invalid_argcount"] % dict(name="caption", expected=1, actual=len(args))
+            )
+
+        footnote = len(context["footnotes"]) + 1
+        context["postprocess"]["footnote"] = self.postprocess_footnotes
+        context["footnotes"].append(args[0])
+        return f'<sup><a href="#cdt:footnote-{footnote}">[{footnote}]</a></sup>'
+
+    def get_priority(self):
+        return -330
+
+    @staticmethod
+    def postprocess_footnotes(soup: TexSoup, context: dict) -> None:
+        soup.append("<hr />")
+        for index, note in enumerate(context["footnotes"]):
+            soup.append(f'<p class="m-0" id="cdt:footnote-{index + 1}">[{index + 1}] {note}</p>')
+
+
 def soup_to_command(cmd: TexNode) -> tuple[str, LatexCommand]:
     brace_args = [arg for arg in cmd.args if arg.name == "BraceGroup"]
     bracket_args = [arg for arg in cmd.args if arg.name == "BracketGroup"]
@@ -346,6 +368,12 @@ def soup_to_command(cmd: TexNode) -> tuple[str, LatexCommand]:
     return name, TextCommand(
         str(brace_args[1].contents[0]).replace("{", "{{").replace("}", "}}"), num_args, optional_arg
     )
+
+
+def postprocess(soup: TexSoup, context: dict) -> tuple[TexSoup, dict]:
+    for func in context["postprocess"].values():
+        func(soup, context)
+    return soup, context
 
 
 def convert_latex(context_commands: dict[str, LatexCommand], latext: str) -> tuple[TexSoup, dict]:
@@ -369,6 +397,8 @@ def convert_latex(context_commands: dict[str, LatexCommand], latext: str) -> tup
         "iterators": {"problem": 0, "letter": 0, "captions": 0},
         "commands": context_commands,
         "labels": {},
+        "postprocess": {},
+        "footnotes": [],
     }
 
     for j in range(max_regens):
@@ -399,5 +429,5 @@ def convert_latex(context_commands: dict[str, LatexCommand], latext: str) -> tup
             raise ValueError(locale["exceptions"]["nesting_limit"] % dict(limit=nesting_limit))
 
         if not context.get("need_regen"):
-            return soup, context
+            return postprocess(soup, context)
     raise ValueError(locale["exceptions"]["regen_limit"] % dict(limit=max_regens))
