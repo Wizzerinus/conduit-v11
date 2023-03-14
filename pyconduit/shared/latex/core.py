@@ -27,8 +27,10 @@ class MetadataNode:
             self.kwargs["text"] = ""
 
         if self.collect_text and text is not None:
-            if (text.startswith("$") and self.kwargs["text"] and self.kwargs["text"][-1] not in ".?!(") or (
-                self.kwargs["text"].endswith("$") and text and text[0] not in ",.-?!"
+            if (
+                (text.startswith("$") and self.kwargs["text"] and self.kwargs["text"][-1] not in ".?!(")
+                or (self.kwargs["text"] and self.kwargs["text"][-1] in "$>" and text and text[0] not in ",.-?!")
+                or (text and text[-1] in "*")
             ):
                 self.kwargs["text"] = self.kwargs["text"].rstrip() + " "
             self.kwargs["text"] += text.strip()

@@ -102,6 +102,7 @@ BuiltinCommands = {
     "noindent": TextCommand("", 0),
     "newpage": TextCommand("", 0),
     "qquad": TextCommand("    ", 0),
+    "quad": TextCommand("    ", 0),
     "mbox": TextCommand("\\text{{#1}}", 1),
     "fbox": TextCommand("\\text{{#1}}", 1),
     # complex commands
