@@ -116,9 +116,11 @@ def regen_cache_mid(bundle: BundleDocument, ctx: LatexRequest) -> tuple[bool, st
 
 
 def debug_stuff(bundle: BundleDocument, ctx: LatexRequest):
+    if not bundle.conduit:
+        raise ValueError("conduit not found")
     problems = [prob.text for prob in bundle.latex.objects if isinstance(prob, LatexProblem) and prob.conduit_include]
     old_problems = bundle.conduit.problem_text_cache
-    raise ValueError(json.dumps(dict(problems=problems, old_problems=old_problems)))
+    raise ValueError(json.dumps(dict(problems=problems, old_problems=old_problems), ensure_ascii=False))
 
 
 regen_strategies = {
