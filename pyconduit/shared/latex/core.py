@@ -259,6 +259,13 @@ class ProblemMacro(LatexCommand):
     def apply(self, context: dict, node: TexNode, *args: str):
         self.update_iterator(context, "problem", self.problem)
         self.update_iterator(context, "letter", self.letter)
+
+        # our teachers forget to use \zp instead of \ze. so, enjoy this little back-analysis to fix it
+        is_full_problem = "%(leth)s" not in self.fmt and self.conduit_include and self.problem == 1
+        if context["added_full_problem"] and not is_full_problem and self.problem != 1:
+            raise ValueError(locale["exceptions"]["subproblem_issue"] % context["iterators"]["problem"])
+        context["added_full_problem"] = is_full_problem
+
         letter_index = context["iterators"]["letter"] + sum(
             1 for i in problem_skip_indices if i < context["iterators"]["letter"]
         )
@@ -409,6 +416,7 @@ def convert_latex(context_commands: dict[str, LatexCommand], latext: str) -> tup
         "labels": {},
         "postprocess": {},
         "footnotes": [],
+        "added_full_problem": False,
     }
     length_check_distance = cfg["compilation"]["length-check-distance"]
     cmd_limit = cfg["compilation"]["max-command-count"]

@@ -70,7 +70,8 @@ BuiltinCommands = {
     "sout": TextCommand("~~#1~~", 1, trim_contents=True, empty_contents=""),
     "ldots": TextCommand("...", 0),
     # problem macros
-    "z": ProblemMacro(problem=1, letter=0, fmt="%(z)i%(ext)s.", cfmt="%(z)i", standalone=True),
+    # TIL we use \z instead of \ze
+    "z": ProblemMacro(problem=1, letter=-1, fmt="%(z)i%(ext)s.", conduit_include=False, start=True),
     "zp": ProblemMacro(problem=1, letter=0, fmt="%(z)i%(ext)s.", cfmt="%(z)i", standalone=True),
     "zpstar": ProblemMacro(problem=1, letter=0, fmt="%(z)i*%(ext)s.", cfmt="%(z)i*", standalone=True),
     "zcirc": ProblemMacro(problem=1, letter=0, fmt="%(z)i$^\\circ$%(ext)s.", cfmt="%(z)i<sup>o</sup>", standalone=True),
@@ -155,7 +156,7 @@ def build_latex(latext: str) -> LatexDocument:
 
     current_metadata = MetadataNode("text")
     for node in soup.contents:
-        is_math = isinstance(node, TexNode) and node.name[0] == "$"
+        is_math = isinstance(node, TexNode) and node.name and node.name[0] == "$"
         if isinstance(node, str) or isinstance(node, Token) or is_math:
             node = str(node)
             if not is_math:
