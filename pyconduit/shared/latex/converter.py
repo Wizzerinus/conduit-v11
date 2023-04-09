@@ -5,7 +5,7 @@ from mdit_py_plugins.anchors import anchors_plugin
 from TexSoup import TexNode
 from TexSoup.utils import Token
 
-from pyconduit.models.latex import LatexDocument, LatexObject
+from pyconduit.models.latex import LatexDocument, LatexObject, LatexText
 from pyconduit.shared.helpers import get_config
 from pyconduit.shared.latex.core import (
     CaptionMacro,
@@ -174,6 +174,22 @@ def build_latex(latext: str) -> LatexDocument:
             raise ValueError(locale["exceptions"]["unknown_node"] % dict(node=node, type=type(node)))
 
     collect_excess(doc, current_metadata)
+
+    # Now we need to postprocess the document to split anything including linebreaks into parts.
+    # Cringe, I know.
+    new_objects = []
+    for latex_part in doc.objects:
+        if not hasattr(latex_part, "text"):
+            new_objects.append(latex_part)
+            continue
+
+        text = latex_part.text.split("<br />")  # noqa
+        latex_part.text = text[0]
+        new_objects.append(latex_part)
+        for more_text in text[1:]:
+            new_objects.append(LatexText(text=more_text))
+
+    doc.objects = new_objects
     return doc
 
 
