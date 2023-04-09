@@ -12,7 +12,7 @@ cfg = get_config("latex")
 locale = get_config("localization")
 first_problem_character = cfg["iterators"]["first-letter"]
 problem_skips = cfg["iterators"]["letter-skips"]
-problem_skip_indices = [ord(c) - ord(first_problem_character) for c in problem_skips]
+problem_skip_indices = [ord(c) - ord(first_problem_character) - 1 for c in problem_skips]
 priority_cap = 10000
 image_datastore = datastore_manager.get("images")
 
