@@ -15,11 +15,8 @@ Note that if the conduit has to be rebuilt and the author cannot edit them, a wa
   and if so, regenerate the cache.
 * 'cache-optimal' - attempt to use the cached problem texts. If a problem is not found, but all cached problems are in
   the latex file, reorder in the conduit. If a problem also went missing, do not generate conduit and emit a warning.
-* 'cache-strong' - same with cache-optimal, but if an unknown problem is between two known ones, update its text
-  in the cache first. This can apply to any number of problems.
-
-We currently have 'none', 'once', 'force', 'wipe-cache' and 'cache-optimal' implemented. Eventually we might do more.
-while cache-strong sounds good in theory, it is hard to write and causes data loss in certain scenarios.
+* 'wipe-removed' - if any new problems appeared, emit a warning. Otherwise, delete all missing problems.
+* '__debug' - do not save the sheet, dump the current list of problems and the pending list of problems instead.
 """
 
 

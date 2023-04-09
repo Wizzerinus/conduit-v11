@@ -1,3 +1,5 @@
+import json
+
 from pyconduit.models.bundle import BundleDocument
 from pyconduit.models.conduit import Conduit
 from pyconduit.models.latex import LatexProblem, LatexRequest
@@ -113,6 +115,12 @@ def regen_cache_mid(bundle: BundleDocument, ctx: LatexRequest) -> tuple[bool, st
     return True, ""
 
 
+def debug_stuff(bundle: BundleDocument, ctx: LatexRequest):
+    problems = [prob.text for prob in bundle.latex.objects if isinstance(prob, LatexProblem) and prob.conduit_include]
+    old_problems = bundle.conduit.problem_text_cache
+    raise ValueError(json.dumps(dict(problems=problems, old_problems=old_problems)))
+
+
 regen_strategies = {
     "none": no_regen,
     "once": regen_once,
@@ -120,4 +128,5 @@ regen_strategies = {
     "cache-optimal": regen_cache_mid,
     "wipe-cache": wipe_problem_cache,
     "wipe-removed": wipe_removed_problems,
+    "__debug": debug_stuff,
 }
