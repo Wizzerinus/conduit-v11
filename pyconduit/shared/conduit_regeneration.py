@@ -44,6 +44,36 @@ def wipe_problem_cache(bundle: BundleDocument, ctx: LatexRequest) -> tuple[bool,
     return True, ""
 
 
+def wipe_removed_problems(bundle: BundleDocument, ctx: LatexRequest) -> tuple[bool, str]:
+    if not ctx.force_regen:
+        raise ValueError(locale["exceptions"]["need_removed_regen"])
+
+    old_problem_names = bundle.conduit.problem_text_cache
+    problems = [prob for prob in bundle.latex.objects if isinstance(prob, LatexProblem) and prob.conduit_include]
+    new_problem_names = [prob.text.strip() for prob in problems]
+    if remaining_names := set(new_problem_names) - set(old_problem_names):
+        return False, (locale["pages"]["sheet_editor"]["wipe_removed_fail"] % "; ".join(remaining_names))
+
+    # the item on index (i) is the new index of the problem, thats text is at index (i) in the cache
+    indices_converted = []
+    for text in bundle.conduit.problem_text_cache:
+        try:
+            indices_converted.append(new_problem_names.index(text.strip()))
+        except ValueError:
+            indices_converted.append(-1)
+
+    new_contents = {}
+    for user, problem_marks in bundle.conduit.content.items():
+        new_contents[user] = ["" for _ in range(len(problems))]
+        for problem_mark, index in zip(problem_marks, indices_converted):
+            if index == -1:
+                continue
+            new_contents[user][index] = problem_mark
+
+    bundle.conduit = make_conduit(problems, new_contents)
+    return True, ""
+
+
 def regen_cache_mid(bundle: BundleDocument, ctx: LatexRequest) -> tuple[bool, str]:
     if bundle.conduit is None:
         problems = [prob for prob in bundle.latex.objects if isinstance(prob, LatexProblem)]
@@ -89,4 +119,5 @@ regen_strategies = {
     "force": regen_force,
     "cache-optimal": regen_cache_mid,
     "wipe-cache": wipe_problem_cache,
+    "wipe-removed": wipe_removed_problems,
 }
