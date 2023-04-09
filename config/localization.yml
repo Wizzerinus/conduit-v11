@@ -58,7 +58,8 @@ exceptions:
   command_banned: Команда '%(name)s' запрещена! Используйте '%(instead)s' вместо нее.
   malformed_newcommand: Некорректное определение команды! Получено '%(actual)s'.
   nesting_limit: Превышен лимит вложенности команд (%(limit)i)!
-  latex_big: LaTeX файл слишком большой! Ожидалось не более %(limit)i символов, получено %(actual)i.
+  latex_big: LaTeX файл слишком большой! Ожидалось не более %(limit)i символов, получено %(size)i.
+  too_many_commands: Слишком много команд на одном уровне! Ожидалось не более %(limit)i, получено %(size)i.
   need_force_regen: Используется force стратегия перестройки кондуитов, но кондуит уже есть. Добавьте в документ '__FORCE_REGEN__'.
   passwords_mismatch: Пароли не совпадают!
   no_conduit_for_user: У пользователя нет кондуита!

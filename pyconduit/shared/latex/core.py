@@ -1,4 +1,5 @@
 import abc
+import random
 import re
 
 from TexSoup import TexNode, TexSoup
@@ -75,6 +76,9 @@ class LatexCommand(abc.ABC):
                         contents.append(c)
                     elif isinstance(replacement, tuple):
                         contents.extend(replacement)
+                    elif isinstance(replacement, str):
+                        soup = TexSoup(replacement)
+                        contents.extend(soup.expr.contents)
                     else:
                         contents.append(replacement)
 
@@ -84,6 +88,9 @@ class LatexCommand(abc.ABC):
         else:
             if isinstance(replacement, tuple):
                 node.parent.replace(node, *replacement)
+            elif isinstance(replacement, str):
+                soup = TexSoup(replacement)
+                node.parent.replace(node, *soup.expr.contents)
             else:
                 node.parent.replace(node, replacement)
 
@@ -105,7 +112,7 @@ class TextCommand(LatexCommand):
         trim_contents: bool = False,
         empty_contents: str = None,
     ):
-        self.content = self.hash_regex.sub(lambda t: f"{t[1]}{{{int(t[2]) - 1}}}", content)
+        self.content = self.hash_regex.sub(lambda t: f"{t[1]}{{{int(t[2])}}}", content)
         self.num_args = num_args
         self.optional_arg = optional_arg
         self.trim_contents = trim_contents
@@ -132,7 +139,8 @@ class TextCommand(LatexCommand):
 
         if self.empty_contents is not None and not [arg for arg in args if arg]:
             return self.empty_contents
-        return self.content.format(*args)
+        nodeContents = node.contents[0].strip(" \n") if node.contents else ""
+        return self.content.format(nodeContents, *args)
 
     def recursion_ready(self, cmd: TexNode, all_commands: dict[str, LatexCommand]) -> bool:
         arg_data = [x if arg.contents else "" for arg in cmd.args for x in arg.contents]
@@ -367,7 +375,7 @@ def soup_to_command(cmd: TexNode) -> tuple[str, LatexCommand]:
     optional_arg = None if len(bracket_args) <= 1 else bracket_args[1].contents[0]
     name = str(brace_args[0].contents[0]).lstrip("\\")
     return name, TextCommand(
-        str(brace_args[1].contents[0]).replace("{", "{{").replace("}", "}}"), num_args, optional_arg
+        " ".join(map(str, brace_args[1].contents)).replace("{", "{{").replace("}", "}}"), num_args, optional_arg
     )
 
 
@@ -401,6 +409,9 @@ def convert_latex(context_commands: dict[str, LatexCommand], latext: str) -> tup
         "postprocess": {},
         "footnotes": [],
     }
+    length_check_distance = cfg["compilation"]["length-check-distance"]
+    cmd_limit = cfg["compilation"]["max-command-count"]
+    before_next_check = 1
 
     for j in range(max_regens):
         soup = TexSoup(latext)
@@ -411,7 +422,11 @@ def convert_latex(context_commands: dict[str, LatexCommand], latext: str) -> tup
                 command_keys = list(
                     c for c in context_commands.keys() if context_commands[c].get_priority() == priority
                 )
-                for cmd in soup.find_all(command_keys):
+
+                searched = soup.find_all(command_keys)
+                if len(searched) > cmd_limit:
+                    raise ValueError(locale["exceptions"]["too_many_commands"] % dict(limit=cmd_limit, size=len(searched)))
+                for cmd in searched:
                     callback = context_commands[cmd.name]
                     if not callback.recursion_ready(cmd, context_commands):
                         continue
@@ -419,9 +434,14 @@ def convert_latex(context_commands: dict[str, LatexCommand], latext: str) -> tup
                     arg_data = [" ".join(str(x) for x in arg.contents) if arg.contents else "" for arg in cmd.args]
                     callback.invoke(context, cmd, *arg_data)
                     last_stage = priority
-                    soup_len = len(str(soup))
-                    if soup_len > char_limit:
-                        raise ValueError(locale["exceptions"]["latex_big"] % dict(limit=char_limit, size=soup_len))
+
+                    before_next_check -= 1
+                    if not before_next_check:
+                        soup_len = len(str(soup))
+                        if soup_len > char_limit:
+                            raise ValueError(locale["exceptions"]["latex_big"] % dict(limit=char_limit, size=soup_len))
+
+                        before_next_check = random.randint(1, length_check_distance)
                 if last_stage == priority:
                     break
             if last_stage == priority_cap:

@@ -1,6 +1,8 @@
 compilation:
-  character-limit: 50000
+  character-limit: 15000
   command-nesting-limit: 10
+  length-check-distance: 15
+  max-command-count: 150
   excess-stacking: 60
 iterators:
   first-letter: "а"
