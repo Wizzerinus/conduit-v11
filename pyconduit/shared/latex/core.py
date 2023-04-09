@@ -139,7 +139,7 @@ class TextCommand(LatexCommand):
 
         if self.empty_contents is not None and not [arg for arg in args if arg]:
             return self.empty_contents
-        nodeContents = node.contents[0].strip(" \n") if node.contents else ""
+        nodeContents = str(node.contents[0]).strip(" \n") if node.contents else ""
         return self.content.format(nodeContents, *args)
 
     def recursion_ready(self, cmd: TexNode, all_commands: dict[str, LatexCommand]) -> bool:
