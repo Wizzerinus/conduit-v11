@@ -28,14 +28,15 @@ class MetadataNode:
             self.kwargs["text"] = ""
 
         if self.collect_text and text is not None:
-            if (
-                (text.startswith("$") and self.kwargs["text"] and self.kwargs["text"][-1] not in ".?!(")
-                or (self.kwargs["text"] and self.kwargs["text"][-1] in "$>" and text and text[0] not in ",.-?!")
-                or (text and text[-1] in "*")
-                or (self.kwargs["text"] and self.kwargs["text"][-1] in "*")
-            ):
-                self.kwargs["text"] = self.kwargs["text"].rstrip() + " "
-            self.kwargs["text"] += text.strip()
+            text = text.lstrip(" ")
+            if text and self.kwargs["text"]:
+                if (
+                    (text[0] in "$" and self.kwargs["text"][-1] not in ".?!(*")
+                    or (self.kwargs["text"][-1] in "$>*" and text[0] not in "$,.-?!:)")
+                    or (text[0] in "*" and self.kwargs["text"][-1] not in "$")
+                ):
+                    self.kwargs["text"] = self.kwargs["text"].rstrip() + " "
+            self.kwargs["text"] += text.replace("\n\n", "<br />").strip()
         elif not self.collect_text or self.kwargs["text"].strip():
             excess_text = ""
             if self.collect_text:
@@ -425,7 +426,9 @@ def convert_latex(context_commands: dict[str, LatexCommand], latext: str) -> tup
 
                 searched = soup.find_all(command_keys)
                 if len(searched) > cmd_limit:
-                    raise ValueError(locale["exceptions"]["too_many_commands"] % dict(limit=cmd_limit, size=len(searched)))
+                    raise ValueError(
+                        locale["exceptions"]["too_many_commands"] % dict(limit=cmd_limit, size=len(searched))
+                    )
                 for cmd in searched:
                     callback = context_commands[cmd.name]
                     if not callback.recursion_ready(cmd, context_commands):

@@ -24,12 +24,17 @@ from pyconduit.shared.latex.core import (
     convert_latex,
 )
 from pyconduit.shared.latex.markdown_centerline import centerline_plugin
+from pyconduit.shared.latex.markdown_stars import star_only_emphasis
 
 cfg = get_config("latex")
 locale = get_config("localization")
 md_generator = MarkdownIt("gfm-like")
+# Unfortunately, underscores trigger emphasis plugin, and latex formulas can include underscores.
+# That means I actually have to write my own emphasis plugin. Damn.
+md_generator.disable("emphasis")
 md_generator.use(anchors_plugin, max_level=3, permalink=True)
 md_generator.use(centerline_plugin)
+md_generator.use(star_only_emphasis)
 
 # These are applied before TexSoup is invoked
 Replacements = {
@@ -45,7 +50,7 @@ Replacements = {
     "~": " ",
 }
 
-text_regex = re.compile(r"\\text\{(.+?)\}")
+text_regex = re.compile(r"\\text\{(.+?)}")
 comment_regex = re.compile(r"(^|[^\\])%.*?\n", re.M)
 
 # These are applied during the latex compilation
