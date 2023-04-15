@@ -41,10 +41,13 @@
         const cdtexport_help = "% The argument can be one of the modes below, default is 'none'.\n" +
             "% I recommend using 'none' before the sheet exists, 'once' to generate it, and 'cache-optimal' if you add a new problem.\n" +
             "% The modes currently implemented: 'none', 'once', 'force', 'cache-optimal', 'wipe-cache', 'wipe-removed'.\n" +
-            "% cache-optimal will add problems that were not in the old version.\n" +
+            "% cache-optimal will add problems that were not in the old version, assuming no problems were removed.\n" +
             "% wipe-cache will remove the problem text cache, assuming both current and old version have the same number of problems.\n" +
-            "% wipe-removed will remove all problems that do not exist anymore, assuming there are no new problems."
-        const InitialText = `\\sheetid{}\n\\sheetname{New sheet}\n${cdtexport_help}\n\\cdtexport{none}`
+            "% wipe-removed will remove all problems that do not exist anymore, assuming there are no new problems.\n" +
+            "% You might want to use force strategy if all of these are false, BUT it erases all solved problems.\n"
+        const save_help = "% Set the Sheet ID below. Then, press Ctrl+S to save the document (and create the sheet).\n" +
+            "% Don't forget to change the sheet name below. If this sheet needs a conduit, set the export strategy as well.\n"
+        const InitialText = `${save_help}\\sheetid{}\n\\sheetname{New sheet}\n${cdtexport_help}\\cdtexport{none}`
         let wss, editor
         const app = {
             data() {
