@@ -12,7 +12,7 @@ jobs:
       - name: Website Deploy
         uses: fjogeleit/http-request-action@master
         with:
-          url: 'https://conduit179.ml/internal/update'
+          url: 'https://conduit.179.ru/internal/update'
           method: 'POST'
           bearerToken: ${{ secrets.DEPLOYMENT_KEY }}
           timeout: 30000
