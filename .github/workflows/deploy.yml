@@ -15,4 +15,4 @@ jobs:
           url: 'https://conduit.179.ru/internal/update'
           method: 'POST'
           bearerToken: ${{ secrets.DEPLOYMENT_KEY }}
-          timeout: 30000
+          timeout: 60000
