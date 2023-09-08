@@ -113,7 +113,7 @@ class TextCommand(LatexCommand):
         trim_contents: bool = False,
         empty_contents: str = None,
     ):
-        self.content = self.hash_regex.sub(lambda t: f"{t[1]}{{{int(t[2])}}}", content)
+        self.content = self.hash_regex.sub(lambda t: f"{t[1]}{{{int(t[2]) - 1}}}", content)
         self.num_args = num_args
         self.optional_arg = optional_arg
         self.trim_contents = trim_contents
