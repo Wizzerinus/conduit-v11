@@ -67,6 +67,7 @@
                         {% endif %}
                     ],
                     styles: {},
+                    row_styles: [],
                 }
             },
 
@@ -81,6 +82,7 @@
                         this.current_sheet = sheet.id
                         this.problems = response.data.problems
                         this.styles = response.data.styles
+                        this.row_styles = response.data.row_styles
                         if (hash) {
                             document.location.hash = hash
                             setTimeout(() => document.getElementById(decodeURI(hash.slice(1))).scrollIntoView(true), 0.1)
@@ -131,6 +133,9 @@
                 getStyle(row_index, column_index) {
                     if (!this.styles[column_index])
                         return null
+                    if (column_index === 0) {
+                        return this.row_styles[row_index] || null
+                    }
                     const value = this.styles[column_index][row_index]
                     return value || null
                 },

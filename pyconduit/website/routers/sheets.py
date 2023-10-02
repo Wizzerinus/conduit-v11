@@ -132,6 +132,7 @@ async def read_file(file_id: str, user: User = Depends(get_current_user)):
     solved_problems = {}
     problems = []
     styles = []
+    row_styles = []
     if (
         user
         and user.privileges.conduit_generation
@@ -140,7 +141,7 @@ async def read_file(file_id: str, user: User = Depends(get_current_user)):
         and bundle_document.precomputed
     ):
         conduit = bundle_document.precomputed.conduit
-        problems, styles = postprocess_limited_conduit({user.login}, bundle_document)
+        problems, styles, row_styles = postprocess_limited_conduit({user.login}, bundle_document)
         for result, problem in zip(conduit.content[user.login], conduit.problem_names):
             solved = result.split(";")[0] not in ("0", "")
             if solved:
@@ -151,6 +152,7 @@ async def read_file(file_id: str, user: User = Depends(get_current_user)):
         "solved_problems": solved_problems,
         "problems": problems,
         "styles": styles,
+        "row_styles": row_styles,
     }
 
 

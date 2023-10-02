@@ -73,9 +73,12 @@ def get_all_users(conduit: Conduit) -> list[UserUnprivileged]:
     return sorted(users.values(), key=lambda user: user.name)
 
 
-def postprocess_limited_conduit(user_logins: SupportsContains, bundle_document: BundleDocument) -> tuple[list, list]:
+def postprocess_limited_conduit(
+    user_logins: SupportsContains, bundle_document: BundleDocument
+) -> tuple[list, list, list]:
     problems = []
     styles = []
+    row_styles = [""]
     precomputed = bundle_document.precomputed
     conduit = precomputed.conduit
 
@@ -85,6 +88,7 @@ def postprocess_limited_conduit(user_logins: SupportsContains, bundle_document: 
         if not (row_id.startswith("_") and row_id in precomputed.limited_rows) and row_id not in user_logins:
             continue
         first_column.append(user_data.name)
+        row_styles.append(precomputed.row_styles[row_id])
     problems.append(first_column)
     styles.append([])
 
@@ -101,4 +105,4 @@ def postprocess_limited_conduit(user_logins: SupportsContains, bundle_document: 
             style_append.append(precomputed.styles.get(row_id, {}).get(problem, ""))
         problems.append(prob_append)
         styles.append(style_append)
-    return problems, styles
+    return problems, styles, row_styles
