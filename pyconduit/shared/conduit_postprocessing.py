@@ -88,7 +88,7 @@ def postprocess_limited_conduit(
         if not (row_id.startswith("_") and row_id in precomputed.limited_rows) and row_id not in user_logins:
             continue
         first_column.append(user_data.name)
-        row_styles.append(precomputed.row_styles[row_id])
+        row_styles.append(precomputed.row_styles.get(row_id, ""))
     problems.append(first_column)
     styles.append([])
 
