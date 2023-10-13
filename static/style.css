@@ -71,23 +71,19 @@
     border: 1px solid dimgray !important;
 }
 
-.table-chover td, .table-chover th {
-    position: relative;
-}
-
 .table-chover {
-    overflow: hidden;
+    position: relative;
 }
 
 .table-chover td:not(:first-child):hover::after {
     background-color: #f0f0f0;
     content: '\00a0';
-    height: 10000px;
-    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 47px;
     position: absolute;
-    top: -5000px;
-    width: 100%;
-    z-index: -10000;
+    transform: translateX(-23.5px);
+    z-index: -1;
 }
 
 .table-conduit td:first-child:not(.conduit-cell),
