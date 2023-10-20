@@ -214,6 +214,19 @@ async def image_editor(request: Request, user: User = Depends(RequireScope("shee
     return templates.TemplateResponse("modules/image_editor.html", data)
 
 
+@sheets_app.post("/unbrick/{sheet_id}", dependencies=[Depends(RequireScope("admin"))])
+async def unbrick_sheet(sheet_id: str):
+    data = socket_context.pop(sheet_id, None)
+    if not data:
+        return {"success": False}
+
+    for handle in data["users"]:
+        sheet = socket_current_sheet_per_user.pop(handle, None)
+        if sheet == sheet_id:
+            await socket_manager.broadcast({"action": "Close", "id": handle.id, "sheet_id": sheet})
+    return {"success": True}
+
+
 # Used to broadcast the currently edited file to prevent multiple users from editing the same file
 @sheets_app.websocket("/editor")
 async def editor_websocket(websocket: WebSocket):
