@@ -93,6 +93,7 @@ BuiltinCommands = {
     "sheetid": GlobalConfig("sheet_id"),
     "sheetname": GlobalConfig("sheet_name"),
     "cdtexport": GlobalConfig("conduit-strategy"),
+    "letterord": GlobalConfig("letter-order"),
     # environments
     "center": TextEnv("-> #1 <-"),
     "centerline": TextCommand("-> #1 <-", 1),

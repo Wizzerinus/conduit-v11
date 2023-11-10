@@ -266,10 +266,14 @@ class ProblemMacro(LatexCommand):
             raise ValueError(locale["exceptions"]["subproblem_issue"] % context["iterators"]["problem"])
         context["added_full_problem"] = is_full_problem
 
-        letter_index = context["iterators"]["letter"] + sum(
-            1 for i in problem_skip_indices if i < context["iterators"]["letter"]
-        )
-        letter_str = chr(ord(first_problem_character) + letter_index)
+        letter_ord = context.get("letter-order", "")
+        if letter_ord:
+            letter_str = letter_ord[context["iterators"]["letter"]]
+        else:
+            letter_index = context["iterators"]["letter"] + sum(
+                1 for i in problem_skip_indices if i < context["iterators"]["letter"]
+            )
+            letter_str = chr(ord(first_problem_character) + letter_index)
         format_data = {"z": context["iterators"]["problem"], "leth": letter_str}
 
         if not args:
