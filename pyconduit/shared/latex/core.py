@@ -306,7 +306,7 @@ class LabelMacro(LatexCommand):
 
     def apply(self, context: dict, node: TexNode, *args: str):
         if len(args) != 1:
-            raise ValueError(locale["exceptions"]["invalid_env_argcount"])
+            raise ValueError(locale["exceptions"]["invalid_argcount"])
         if not context.get("last_iterator"):
             raise ValueError(locale["exceptions"]["label_no_problem"] % dict(label=args[0]))
 
@@ -320,12 +320,23 @@ class RefMacro(LatexCommand):
 
     def apply(self, context: dict, node: TexNode, *args: str):
         if len(args) != 1:
-            raise ValueError(locale["exceptions"]["invalid_env_argcount"])
+            raise ValueError(locale["exceptions"]["invalid_argcount"])
         if args[0] not in context["labels"]:
             context["need_regen"] = True
             return False
 
         return f'**{context["labels"][args[0]]}**'
+
+
+class SetIteratorMacro(LatexCommand):
+    def apply(self, context: dict, node: TexNode, *args: str):
+        if len(args) != 2:
+            raise ValueError(locale["exceptions"]["invalid_argcount"])
+        iterator, value = args
+        if iterator not in context["configured_iterators"]:
+            context["configured_iterators"].add(iterator)
+            context["iterators"][iterator] = int(value)
+        return ""
 
 
 class IncludeGraphics(LatexCommand):
@@ -416,6 +427,7 @@ def convert_latex(context_commands: dict[str, LatexCommand], latext: str) -> tup
     max_regens = 2
     context = {
         "iterators": {"problem": 0, "letter": 0, "captions": 0},
+        "configured_iterators": set(),
         "commands": context_commands,
         "labels": {},
         "postprocess": {},

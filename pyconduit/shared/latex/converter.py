@@ -18,6 +18,7 @@ from pyconduit.shared.latex.core import (
     MetadataNode,
     ProblemMacro,
     RefMacro,
+    SetIteratorMacro,
     TextCommand,
     TextEnv,
     WrapfigureEnv,
@@ -116,6 +117,7 @@ BuiltinCommands = {
     # complex commands
     "label": LabelMacro(),
     "ref": RefMacro(),
+    "setiterator": SetIteratorMacro(),
     "includegraphics": IncludeGraphics(),
     "caption": CaptionMacro(),
     "footnote": FootnoteMacro(),
