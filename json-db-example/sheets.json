@@ -1,0 +1,116 @@
+{
+  "sheets": {
+    "01": {
+      "latex": {
+        "objects": [
+          {
+            "cls": "problem",
+            "text": "\u0417\u0430\u0434\u0430\u0447\u0430 1.",
+            "num": "1.",
+            "conduit_num": "1",
+            "nlb": true,
+            "nla": true,
+            "inline": false,
+            "conduit_include": true
+          },
+          {
+            "cls": "problem",
+            "text": "\u0417\u0430\u0434\u0430\u0447\u0430 2.",
+            "num": "2.",
+            "conduit_num": "2",
+            "nlb": true,
+            "nla": true,
+            "inline": false,
+            "conduit_include": true
+          },
+          {
+            "cls": "text",
+            "text": ""
+          },
+          {
+            "cls": "problem",
+            "text": "\u0417\u0430\u0434\u0430\u0447\u0430 \u0441 \u043f\u0443\u043d\u043a\u0442\u0430\u043c\u0438:",
+            "num": "3.",
+            "conduit_num": "",
+            "nlb": true,
+            "nla": false,
+            "inline": false,
+            "conduit_include": false
+          },
+          {
+            "cls": "text",
+            "text": ""
+          },
+          {
+            "cls": "problem",
+            "text": "\u041f\u0443\u043d\u043a\u0442 1.",
+            "num": "\u0430)",
+            "conduit_num": "3\u0430",
+            "nlb": false,
+            "nla": false,
+            "inline": false,
+            "conduit_include": true
+          },
+          {
+            "cls": "problem",
+            "text": "\u041f\u0443\u043d\u043a\u0442 2.",
+            "num": "\u0431$^\\circ$)",
+            "conduit_num": "3\u0431<sup>o</sup>",
+            "nlb": false,
+            "nla": false,
+            "inline": false,
+            "conduit_include": true
+          },
+          {
+            "cls": "text",
+            "text": ""
+          },
+          {
+            "cls": "problem",
+            "text": "\u041f\u0443\u043d\u043a\u0442 1 \u0431\u043e\u043b\u044c\u0448\u043e\u0439 \u0437\u0430\u0434\u0430\u0447\u0438;",
+            "num": "4.\u0430)",
+            "conduit_num": "4\u0430",
+            "nlb": true,
+            "nla": false,
+            "inline": false,
+            "conduit_include": true
+          },
+          {
+            "cls": "problem",
+            "text": "\u0421\u043b\u043e\u0436\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442.",
+            "num": "\u0431*)",
+            "conduit_num": "4\u0431*",
+            "nlb": false,
+            "nla": false,
+            "inline": false,
+            "conduit_include": true
+          }
+        ],
+        "orig_doc": "% Set the Sheet ID below. Then, press Ctrl+S to save the document (and create the sheet).\n% Don't forget to change the sheet name below. If this sheet needs a conduit, set the export strategy as well.\n\\sheetid{01}\n\\sheetname{Test sheet}\n% The argument can be one of the modes below, default is 'none'.\n% I recommend using 'none' before the sheet exists, 'once' to generate it, and 'cache-optimal' if you add a new problem.\n% The modes currently implemented: 'none', 'once', 'force', 'cache-optimal', 'wipe-cache', 'wipe-removed'.\n% cache-optimal will add problems that were not in the old version, assuming no problems were removed.\n% wipe-cache will remove the problem text cache, assuming both current and old version have the same number of problems.\n% wipe-removed will remove all problems that do not exist anymore, assuming there are no new problems.\n% You might want to use force strategy if all of these are false, BUT it erases all solved problems.\n\\cdtexport{cache-optimal}\n\n\\zp \u0417\u0430\u0434\u0430\u0447\u0430 1.\n\\zp \u0417\u0430\u0434\u0430\u0447\u0430 2.\n\n\\z \u0417\u0430\u0434\u0430\u0447\u0430 \u0441 \u043f\u0443\u043d\u043a\u0442\u0430\u043c\u0438:\n\n\\lett \u041f\u0443\u043d\u043a\u0442 1.\n\\lettcirc \u041f\u0443\u043d\u043a\u0442 2.\n\n\\zn \u041f\u0443\u043d\u043a\u0442 1 \u0431\u043e\u043b\u044c\u0448\u043e\u0439 \u0437\u0430\u0434\u0430\u0447\u0438;\n\\lettstar \u0421\u043b\u043e\u0436\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442.\n",
+        "sheet_id": "01",
+        "sheet_name": "Test sheet",
+        "conduit_strategy": "cache-optimal"
+      },
+      "conduit": {
+        "content": {},
+        "problem_names": [
+          "1",
+          "2",
+          "3\u0430",
+          "3\u0431<sup>o</sup>",
+          "4\u0430",
+          "4\u0431*"
+        ],
+        "problem_text_cache": [
+          "\u0417\u0430\u0434\u0430\u0447\u0430 1.",
+          "\u0417\u0430\u0434\u0430\u0447\u0430 2.",
+          "\u041f\u0443\u043d\u043a\u0442 1.",
+          "\u041f\u0443\u043d\u043a\u0442 2.",
+          "\u041f\u0443\u043d\u043a\u0442 1 \u0431\u043e\u043b\u044c\u0448\u043e\u0439 \u0437\u0430\u0434\u0430\u0447\u0438;",
+          "\u0421\u043b\u043e\u0436\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442."
+        ]
+      }
+    }
+  },
+  "formulas": ""
+}

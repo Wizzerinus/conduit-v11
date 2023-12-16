@@ -1,0 +1,94 @@
+{
+  "accounts": {
+    "petr_ivanov": {
+      "login": "petr_ivanov",
+      "password": "9bd36faa8c37f66248025056f92b4747f9699db34d355e90917ceda1435ae0c04b32be95d1ab075b24dfa1c616c116d6f1d0941a70ab3188a2265ab182ff2e34",
+      "salt": "scrypt;3af6ece55cbcdef8199aad50f68f9ce5",
+      "name": "\u041f\u0435\u0442\u0440 \u0418\u0432\u0430\u043d\u043e\u0432",
+      "privileges": {
+        "login": true,
+        "admin": false,
+        "conduit_generation": true,
+        "conduit_edit": false,
+        "sheets_edit": false,
+        "formula_edit": false,
+        "technical_operations": false
+      },
+      "virtual": false,
+      "allow_conduit_view": true,
+      "conduit_autosave": false
+    },
+    "aleksandr_petrov": {
+      "login": "aleksandr_petrov",
+      "password": "ba1f4058897704a25d20d8678fad5d248dc4336ebbf865c37649fa9cfd90e977af9afe68cd70441cecf65d3f60f6ed10438b79cf6062b923fdb4f42a2eaded4d",
+      "salt": "scrypt;3af6ece55cbcdef8199aad50f68f9ce5",
+      "name": "\u0410\u043b\u0435\u043a\u0441\u0430\u043d\u0434\u0440 \u041f\u0435\u0442\u0440\u043e\u0432",
+      "privileges": {
+        "login": true,
+        "admin": false,
+        "conduit_generation": true,
+        "conduit_edit": false,
+        "sheets_edit": false,
+        "formula_edit": false,
+        "technical_operations": false
+      },
+      "virtual": false,
+      "allow_conduit_view": true,
+      "conduit_autosave": false
+    },
+    "ivan_sidorov": {
+      "login": "ivan_sidorov",
+      "password": "9baf27404cdc7b3c91ae14b693822e5b3eff83fecaad7af264354cfb91e10b871690f540980151e9a0016db39c5027b710089d3d204b0a47c79d964de3cd489e",
+      "salt": "scrypt;3af6ece55cbcdef8199aad50f68f9ce5",
+      "name": "\u0418\u0432\u0430\u043d \u0421\u0438\u0434\u043e\u0440\u043e\u0432",
+      "privileges": {
+        "login": true,
+        "admin": false,
+        "conduit_generation": true,
+        "conduit_edit": false,
+        "sheets_edit": false,
+        "formula_edit": false,
+        "technical_operations": false
+      },
+      "virtual": false,
+      "allow_conduit_view": true,
+      "conduit_autosave": false
+    },
+    "dmitrii_alekseev": {
+      "login": "dmitrii_alekseev",
+      "password": "e90f7fa670a58df9f9b68144f328dacba057dc89d806c784a5326bfce23ba1a4baa50dc73f4d9049e1572ae868e19fc92fd1e27548dc15e8868a416e9c6ac230",
+      "salt": "scrypt;3af6ece55cbcdef8199aad50f68f9ce5",
+      "name": "\u0414\u043c\u0438\u0442\u0440\u0438\u0439 \u0410\u043b\u0435\u043a\u0441\u0435\u0435\u0432",
+      "privileges": {
+        "login": true,
+        "admin": false,
+        "conduit_generation": true,
+        "conduit_edit": false,
+        "sheets_edit": false,
+        "formula_edit": false,
+        "technical_operations": false
+      },
+      "virtual": false,
+      "allow_conduit_view": true,
+      "conduit_autosave": false
+    },
+    "aleksei_dmitriev": {
+      "login": "aleksei_dmitriev",
+      "password": "2ff949694bf706e0c19a9833502ab2b4e5c1536069d2a8275d73bf6bd08808255758abda5fa7d876dfa2df0d0bdf5632943b1e592da8e691bb1251fa7872a224",
+      "salt": "scrypt;3af6ece55cbcdef8199aad50f68f9ce5",
+      "name": "\u0410\u043b\u0435\u043a\u0441\u0435\u0439 \u0414\u043c\u0438\u0442\u0440\u0438\u0435\u0432",
+      "privileges": {
+        "login": true,
+        "admin": false,
+        "conduit_generation": true,
+        "conduit_edit": false,
+        "sheets_edit": false,
+        "formula_edit": false,
+        "technical_operations": false
+      },
+      "virtual": false,
+      "allow_conduit_view": true,
+      "conduit_autosave": false
+    }
+  }
+}
