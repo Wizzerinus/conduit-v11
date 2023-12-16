@@ -11,11 +11,14 @@ python-jose = {extras = ["cryptography"], version = "*"}
 python-multipart = "*"
 itsdangerous = "*"
 texsoup = "*"
-markdown-it-py = "*"
+markdown-it-py = "~=2.2"
 mdit-py-plugins = "*"
 asteval = "*"
-coloraide = "*"
+coloraide = "~=1.0"
 linkify-it-py = "*"
+websockets = "~=10.0"
+pydantic = "~=1.10"
+cryptography = "~=38.0"
 
 [dev-packages]
 black = "*"
