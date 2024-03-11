@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 cd /var/local/conduit-v11
 
 if [ -f PIDlock ]; then
@@ -5,4 +7,4 @@ if [ -f PIDlock ]; then
 fi
 
 source venv/bin/activate
-uvicorn --port 7554 --host 0.0.0.0 --workers 1 pyconduit.website.website:app
+python3 venv/bin/uvicorn --port 7554 --host 0.0.0.0 --workers 1 pyconduit.website.website:app
