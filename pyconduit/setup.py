@@ -1,5 +1,6 @@
 import os
 import secrets
+import shutil
 import subprocess
 import sys
 import time
@@ -62,7 +63,7 @@ def backup_database():
     current_backups = os.listdir(backup_folder)
     if len(current_backups) > 5:
         current_backups.sort()
-        os.remove(backup_folder + current_backups[0])
+        shutil.rmtree(backup_folder + current_backups[0])
 
     new_path = backup_folder + "backup_" + str(int(time.time()))
     subprocess.run(["cp", "-r", "json-db", new_path])

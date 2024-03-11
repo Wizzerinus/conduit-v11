@@ -11,13 +11,13 @@ internal_app = FastAPI(dependencies=[Depends(RequireScope("technical_operations"
 
 async def shutdown_task():
     await anyio.sleep(2)
-    subprocess.run(["killall", "uvicorn"])
+    subprocess.run(["systemctl", "restart", "conduit-v11"])
 
 
 @internal_app.post("/update")
 async def update_server():
     subprocess.run(["git", "pull"])
-    # cron job will pick the server back up if it dies
+    # systemctl job will pick the server back up if it dies
     async with anyio.create_task_group() as tg:
         tg.start_soon(shutdown_task)
     return {}

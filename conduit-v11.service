@@ -1,0 +1,9 @@
+[Unit]
+Description=Conduit v11 web daemon
+
+[Service]
+ExecStart=/var/local/conduit-v11/run.sh
+Restart=on-success
+
+[Install]
+WantedBy=default.target
