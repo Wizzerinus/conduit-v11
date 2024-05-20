@@ -1,4 +1,4 @@
-ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.12.5/")
+ace.config.set("basePath", "/static/lib/ace/")
 
 class EditorBind {
     constructor(vue, editor_id, editor_mode) {
