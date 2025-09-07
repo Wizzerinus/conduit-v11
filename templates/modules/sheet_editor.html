@@ -76,10 +76,13 @@
                 },
                 ws_onClose(data) {
                     const {id, sheet_id} = data
-                    delete this.other_users[sheet_id].users[id]
-                    if (Object.keys(this.other_users[sheet_id].users).length === 0)
-                        delete this.other_users[sheet_id]
+                    if (this.other_users[sheet_id] !== undefined) {
+                        delete this.other_users[sheet_id].users[id]
+                        if (Object.keys(this.other_users[sheet_id].users).length === 0)
+                            delete this.other_users[sheet_id]
+                    }
                 },
+                ws_onDeleteSheet() {},
                 ws_onConduitUpdate() {},
                 ws_onNewSheet() {},
 

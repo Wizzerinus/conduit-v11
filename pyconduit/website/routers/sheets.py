@@ -160,7 +160,7 @@ async def read_file(file_id: str, user: User = Depends(get_current_user)):
 async def delete_file(file_id: str):
     if file_id not in datastore.sheets:
         raise HTTPException(status_code=404, detail=locale["exceptions"]["file_not_found"] % dict(filename=file_id))
-    with datastore.sheets.operation():
+    with datastore.operation():
         del datastore.sheets[file_id]
     await socket_manager.broadcast({"action": "DeleteSheet", "id": file_id})
     return {"success": True}

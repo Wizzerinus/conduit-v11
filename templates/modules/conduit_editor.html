@@ -160,6 +160,7 @@
                 this.current_sheet.conduit.column_styles = data.column_styles
             },
             ws_onNewSheet() {},
+            ws_onDeleteSheet() {},
 
             isDisabled(sheet) {
                 return this.other_users[sheet] !== undefined && this.other_users[sheet].method === "sheet" &&
