@@ -1,3 +1,4 @@
+from http import HTTPStatus
 import os
 
 from fastapi import Body, Depends, FastAPI, HTTPException
@@ -7,7 +8,7 @@ from starlette.responses import HTMLResponse, PlainTextResponse
 from pyconduit.models.user import BulkRegister, Privileges, User, UserSensitive
 from pyconduit.shared.datastore import datastore_manager, deatomize
 from pyconduit.shared.helpers import get_config, partition, transform_to_login
-from pyconduit.website.decorators import RequireScope, get_current_user, make_template_data, templates
+from pyconduit.website.decorators import RequireScope, get_current_user, make_template_data, require_login, templates
 from pyconduit.website.routers.login import default_hash
 
 admin_app = FastAPI(dependencies=[Depends(RequireScope("admin"))])
@@ -52,6 +53,16 @@ async def update_privileges(user_data: UserSensitive = Body(...)):
         old_data = dict(all_users.get(user_data.login, {}))
         old_data.update(user_data.dict())
         all_users[user_data.login] = old_data
+    return {"success": True}
+
+
+@admin_app.post("/delete-user")
+async def delete_user(user: User = Depends(require_login), login: str = Body(...)):
+    if login == user.login:
+        raise HTTPException(HTTPStatus.BAD_REQUEST, "Нельзя удалить своего пользователя!")
+    with accounts.operation():
+        all_users = accounts.accounts
+        del all_users[login]
     return {"success": True}
 
 

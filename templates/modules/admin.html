@@ -114,6 +114,7 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ locale.common.btn_close }}</button>
                         <button type="button" class="btn btn-primary" @click="saveUser">{{ locale.common.btn_save }}</button>
+                        <button type="button" class="btn btn-danger" @click="deleteUser">{{ locale.common.btn_delete }}</button>
                     </div>
                 </div>
             </div>
@@ -144,6 +145,16 @@
                     location.reload()
                 } catch(e) {
                     this.alert.set(`{{ locale.pages.admin.error_updating_privileges }}${e}`, "danger")
+                }
+            },
+            async deleteUser() {
+                if (prompt("{{ locale.pages.admin.enter_login_to_delete }}") == this.user.login) {
+                    try {
+                        await axios.post("/admin/delete-user", this.user.login)
+                        location.reload()
+                    } catch(e) {
+                        this.alert.set(`{{ locale.pages.admin.error_deleting_user }}${e}`, "danger")
+                    }
                 }
             },
             markDirty() {

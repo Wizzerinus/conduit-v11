@@ -6,3 +6,5 @@ PIDlock2
 backups
 figures
 venv
+__pycache__
+.vscode
