@@ -71,25 +71,31 @@ BuiltinCommands = {
     "sout": TextCommand("~~#1~~", 1, trim_contents=True, empty_contents=""),
     "ldots": TextCommand("...", 0),
     # problem macros
-    # TIL we use \z instead of \ze
     "z": ProblemMacro(problem=1, letter=-1, fmt="%(z)i%(ext)s.", conduit_include=False, start=True),
-    "zp": ProblemMacro(problem=1, letter=0, fmt="%(z)i%(ext)s.", cfmt="%(z)i", standalone=True),
-    "zpstar": ProblemMacro(problem=1, letter=0, fmt="%(z)i*%(ext)s.", cfmt="%(z)i*", standalone=True),
-    "zcirc": ProblemMacro(problem=1, letter=0, fmt="%(z)i$^\\circ$%(ext)s.", cfmt="%(z)i<sup>o</sup>", standalone=True),
-    "zpcirc": ProblemMacro(
-        problem=1, letter=0, fmt="%(z)i$^\\circ$%(ext)s.", cfmt="%(z)i<sup>o</sup>", standalone=True
-    ),
-    "leth": ProblemMacro(letter=1, fmt="%(leth)s%(ext)s)", cfmt="%(z)i%(leth)s", inline=True),
-    "lett": ProblemMacro(letter=1, fmt="%(leth)s%(ext)s)", cfmt="%(z)i%(leth)s"),
-    "lettstar": ProblemMacro(letter=1, fmt="%(leth)s*%(ext)s)", cfmt="%(z)i%(leth)s*"),
-    "lethcirc": ProblemMacro(letter=1, fmt="%(leth)s$^\\circ$%(ext)s)", cfmt="%(z)i%(leth)s<sup>o</sup>", inline=True),
-    "lettcirc": ProblemMacro(letter=1, fmt="%(leth)s$^\\circ$%(ext)s)", cfmt="%(z)i%(leth)s<sup>o</sup>"),
-    "zncirc": ProblemMacro(
-        problem=1, letter=0, fmt="%(z)i.%(leth)s$^\\circ$%(ext)s)", cfmt="%(z)i%(leth)s<sup>o</sup>", start=True
-    ),
+    "zcirc": ProblemMacro(problem=1, letter=-1, fmt="%(z)i$^\\circ$%(ext)s.", cfmt="%(z)i<sup>o</sup>", conduit_include=False, start=True),
+    "zstar": ProblemMacro(problem=1, letter=-1, fmt="%(z)i*%(ext)s.", cfmt="%(z)i*", conduit_include=False, start=True),
+    "zstarstar": ProblemMacro(problem=1, letter=-1, fmt="%(z)i**%(ext)s.", cfmt="%(z)i**", conduit_include=False, start=True),
+
     "zn": ProblemMacro(problem=1, letter=0, fmt="%(z)i.%(leth)s%(ext)s)", cfmt="%(z)i%(leth)s", start=True),
-    "zecirc": ProblemMacro(problem=1, letter=-1, fmt="%(z)i$^\\circ$%(ext)s.", conduit_include=False, start=True),
-    "ze": ProblemMacro(problem=1, letter=-1, fmt="%(z)i%(ext)s.", conduit_include=False, start=True),
+    "zncirc": ProblemMacro(problem=1, letter=0, fmt="%(z)i.%(leth)s$^\\circ$%(ext)s)", cfmt="%(z)i%(leth)s<sup>o</sup>", start=True),
+    "znstar": ProblemMacro(problem=1, letter=0, fmt="%(z)i.%(leth)s*%(ext)s)", cfmt="%(z)i%(leth)s*", start=True),
+    "znstarstar": ProblemMacro(problem=1, letter=0, fmt="%(z)i.%(leth)s**%(ext)s)", cfmt="%(z)i%(leth)s**", start=True),
+
+    "zp": ProblemMacro(problem=1, letter=0, fmt="%(z)i%(ext)s.", cfmt="%(z)i", standalone=True),
+    "zpcirc": ProblemMacro(problem=1, letter=0, fmt="%(z)i$^\\circ$%(ext)s.", cfmt="%(z)i<sup>o</sup>", standalone=True),
+    "zpstar": ProblemMacro(problem=1, letter=0, fmt="%(z)i*%(ext)s.", cfmt="%(z)i*", standalone=True),
+    "zpstarstar": ProblemMacro(problem=1, letter=0, fmt="%(z)i**%(ext)s.", cfmt="%(z)i**", standalone=True),
+
+    "leth": ProblemMacro(letter=1, fmt="%(leth)s%(ext)s)", cfmt="%(z)i%(leth)s", inline=True),
+    "lethcirc": ProblemMacro(letter=1, fmt="%(leth)s$^\\circ$%(ext)s)", cfmt="%(z)i%(leth)s<sup>o</sup>", inline=True),
+    "lethstar": ProblemMacro(letter=1, fmt="%(leth)s*%(ext)s)", cfmt="%(z)i%(leth)s*", inline=True),
+    "lethstarstar": ProblemMacro(letter=1, fmt="%(leth)s**%(ext)s)", cfmt="%(z)i%(leth)s**", inline=True),
+
+    "lett": ProblemMacro(letter=1, fmt="%(leth)s%(ext)s)", cfmt="%(z)i%(leth)s"),
+    "lettcirc": ProblemMacro(letter=1, fmt="%(leth)s$^\\circ$%(ext)s)", cfmt="%(z)i%(leth)s<sup>o</sup>"),
+    "lettstar": ProblemMacro(letter=1, fmt="%(leth)s*%(ext)s)", cfmt="%(z)i%(leth)s*"),
+    "lettstarstar": ProblemMacro(letter=1, fmt="%(leth)s**%(ext)s)", cfmt="%(z)i%(leth)s**"),
+
     # global configuration
     "sheetid": GlobalConfig("sheet_id"),
     "sheetname": GlobalConfig("sheet_name"),
